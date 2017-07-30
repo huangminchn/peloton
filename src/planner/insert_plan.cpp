@@ -156,11 +156,6 @@ void InsertPlan::SetParameterValues(std::vector<type::Value> *values) {
   }
 }
 
-
-bool InsertPlan::Equals(AbstractPlan &plan) const {
-  return (*this == plan);
-}
-
 bool InsertPlan::operator==(AbstractPlan &rhs) const {
   if (GetPlanNodeType() != rhs.GetPlanNodeType())
     return false;
