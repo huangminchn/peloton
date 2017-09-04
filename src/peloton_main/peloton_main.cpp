@@ -29,6 +29,12 @@ namespace peloton {
         return thread_pool;
     }
 
+//    network::NetworkManager &
+//    PelotonMain::GetNetworkManager() {
+//        static network::NetworkManager network_manager;
+//        return network_manager;
+//    }
+
     void PelotonMain::Initialize() {
         CONNECTION_THREAD_COUNT = std::thread::hardware_concurrency();
         LOGGING_THREAD_COUNT = 1;

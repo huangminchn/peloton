@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common/thread_pool.h"
+#include "network/network_manager.h"
 
 namespace peloton {
 
@@ -11,6 +12,7 @@ namespace peloton {
     class PelotonMain {
     private:
         peloton::ThreadPool thread_pool;
+//        peloton::network::NetworkManager network_manager;
     public:
         void Initialize();
 
@@ -23,6 +25,8 @@ namespace peloton {
         static PelotonMain &GetInstance();
 
         ThreadPool &GetThreadPool();
+
+//        network::NetworkManager &GetNetworkManager();
     };
 
 }
