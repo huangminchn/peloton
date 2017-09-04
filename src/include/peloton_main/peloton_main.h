@@ -12,7 +12,7 @@ namespace peloton {
     class PelotonMain {
     private:
         peloton::ThreadPool thread_pool;
-//        peloton::network::NetworkManager network_manager;
+        peloton::network::NetworkManager network_manager;
     public:
         void Initialize();
 

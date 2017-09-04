@@ -17,6 +17,13 @@ namespace peloton {
 namespace concurrency {
 
 
+    virtual void DecentralizedEpochManager::StartEpoch() override {
+      LOG_TRACE("Starting epoch");
+      peloton::PelotonMain &peloton_main = peloton::PelotonMain::GetInstance();
+      this->is_running_ = true;
+      peloton_main.GetThreadPool().SubmitDedicatedTask(&DecentralizedEpochManager::Running, this);
+    }
+
   // enter epoch with thread id
   cid_t DecentralizedEpochManager::EnterEpoch(const size_t thread_id, const TimestampType ts_type) {
 

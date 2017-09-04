@@ -72,12 +72,7 @@ public:
     epoch_thread.reset(new std::thread(&DecentralizedEpochManager::Running, this));
   }
 
-  virtual void StartEpoch() override {
-    LOG_TRACE("Starting epoch");
-    peloton::PelotonMain &peloton_main = peloton::PelotonMain::GetInstance();
-    this->is_running_ = true;
-    peloton_main.GetThreadPool().SubmitDedicatedTask(&DecentralizedEpochManager::Running, this);
-  }
+  virtual void StartEpoch() override;
 
   virtual void StopEpoch() override {
     LOG_TRACE("Stopping epoch");
