@@ -17,7 +17,7 @@ namespace peloton {
 namespace concurrency {
 
 
-    virtual void DecentralizedEpochManager::StartEpoch() override {
+    void DecentralizedEpochManager::StartEpoch() {
       LOG_TRACE("Starting epoch");
       peloton::PelotonMain &peloton_main = peloton::PelotonMain::GetInstance();
       this->is_running_ = true;
