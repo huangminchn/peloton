@@ -159,7 +159,7 @@ bool CreateExecutor::DExecute() {
     current_txn->SetResult(result);
 
     if (current_txn->GetResult() == ResultType::SUCCESS) {
-      LOG_TRACE("Creating table succeeded!");
+      LOG_TRACE("Creating index succeeded!");
     } else if (current_txn->GetResult() == ResultType::FAILURE) {
       LOG_TRACE("Creating table failed!");
     } else {
