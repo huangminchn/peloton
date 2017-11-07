@@ -16,22 +16,22 @@ namespace test {
 
 class ARTIndexTests : public PelotonTest {};
 
-TEST_F(ARTIndexTests, BasicTest) {
-  TestingArtUtil::BasicTest(IndexType::ART);
-}
-
-
-TEST_F(ARTIndexTests, NonUniqueKeyDeleteTest) {
-  TestingArtUtil::NonUniqueKeyDeleteTest(IndexType::ART);
-}
+//TEST_F(ARTIndexTests, BasicTest) {
+//  TestingArtUtil::BasicTest(IndexType::ART);
+//}
+//
+//
+//TEST_F(ARTIndexTests, NonUniqueKeyDeleteTest) {
+//  TestingArtUtil::NonUniqueKeyDeleteTest(IndexType::ART);
+//}
 
 TEST_F(ARTIndexTests, MultiThreadedInsertTest) {
   TestingArtUtil::MultiThreadedInsertTest(IndexType::ART);
 }
 
-TEST_F(ARTIndexTests, NonUniqueKeyMultiThreadedStressTest) {
-  TestingArtUtil::NonUniqueKeyMultiThreadedStressTest(IndexType::ART);
-}
+//TEST_F(ARTIndexTests, NonUniqueKeyMultiThreadedStressTest) {
+//  TestingArtUtil::NonUniqueKeyMultiThreadedStressTest(IndexType::ART);
+//}
 
 }
 }

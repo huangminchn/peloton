@@ -84,7 +84,7 @@ public:
     std::array<uint64_t, 16> values;
     index::Key key;
   };
-  static std::array<KeyAndValues, 10000> key_to_values;
+  static std::array<KeyAndValues, 100000> key_to_values;
   static std::map<index::TID, index::Key *> value_to_key;
   static bool map_populated;
 

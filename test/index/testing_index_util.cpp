@@ -23,6 +23,7 @@
 #include "storage/tuple.h"
 #include "type/types.h"
 #include "type/value_factory.h"
+#include "common/timer.h"
 
 namespace peloton {
 namespace test {
@@ -218,33 +219,41 @@ void TestingIndexUtil::MultiThreadedInsertTest(const IndexType index_type) {
   const catalog::Schema *key_schema = index->GetKeySchema();
 
   // Parallel Test
-  size_t num_threads = 4;
-  size_t scale_factor = 1;
+  size_t num_threads = 16;
+  size_t scale_factor = 14500;
+
+  Timer<> timer;
+  timer.Start();
   LaunchParallelTest(num_threads, TestingIndexUtil::InsertHelper, index.get(),
                      pool, scale_factor);
+  timer.Stop();
+  printf("elapsed time = %.5lf\n", timer.GetDuration());
 
   index->ScanAllKeys(location_ptrs);
-  EXPECT_EQ(location_ptrs.size(), 7);
-  location_ptrs.clear();
-
-  std::unique_ptr<storage::Tuple> key0(new storage::Tuple(key_schema, true));
-  std::unique_ptr<storage::Tuple> keynonce(
-      new storage::Tuple(key_schema, true));
-
-  keynonce->SetValue(0, type::ValueFactory::GetIntegerValue(1000), pool);
-  keynonce->SetValue(1, type::ValueFactory::GetVarcharValue("f"), pool);
-
-  key0->SetValue(0, type::ValueFactory::GetIntegerValue(100), pool);
-  key0->SetValue(1, type::ValueFactory::GetVarcharValue("a"), pool);
-
-  index->ScanKey(keynonce.get(), location_ptrs);
-  EXPECT_EQ(location_ptrs.size(), 0);
-  location_ptrs.clear();
-
-  index->ScanKey(key0.get(), location_ptrs);
-  EXPECT_EQ(location_ptrs.size(), 1);
-  EXPECT_EQ(location_ptrs[0]->block, TestingIndexUtil::item0->block);
-  location_ptrs.clear();
+  printf("tuple size = %lu\n", location_ptrs.size());
+//  EXPECT_EQ(location_ptrs.size(), 7);
+//  location_ptrs.clear();
+//
+//  std::unique_ptr<storage::Tuple> key0(new storage::Tuple(key_schema, true));
+//  std::unique_ptr<storage::Tuple> keynonce(
+//      new storage::Tuple(key_schema, true));
+//
+//  keynonce->SetValue(0, type::ValueFactory::GetIntegerValue(1000), pool);
+//  keynonce->SetValue(1, type::ValueFactory::GetVarcharValue("f"), pool);
+//
+//  key0->SetValue(0, type::ValueFactory::GetIntegerValue(100), pool);
+//  key0->SetValue(1, type::ValueFactory::GetVarcharValue("a"), pool);
+//
+//  index->ScanKey(keynonce.get(), location_ptrs);
+//  EXPECT_EQ(location_ptrs.size(), 0);
+//  location_ptrs.clear();
+//
+//  index->ScanKey(key0.get(), location_ptrs);
+//  EXPECT_EQ(location_ptrs.size(), 1);
+//  EXPECT_EQ(location_ptrs[0]->block, TestingIndexUtil::item0->block);
+//  location_ptrs.clear();
+//
+//  delete index->GetMetadata()->GetTupleSchema();
 }
 
 void TestingIndexUtil::UniqueKeyMultiThreadedTest(const IndexType index_type) {
@@ -733,24 +742,24 @@ void TestingIndexUtil::InsertHelper(index::Index *index, type::AbstractPool *poo
     std::unique_ptr<storage::Tuple> keynonce(
         new storage::Tuple(key_schema, true));
 
-    key0->SetValue(0, type::ValueFactory::GetIntegerValue(100 * scale_itr),
+    key0->SetValue(0, type::ValueFactory::GetIntegerValue(100 * scale_itr + thread_itr),
                    pool);
     key0->SetValue(1, type::ValueFactory::GetVarcharValue("a"), pool);
-    key1->SetValue(0, type::ValueFactory::GetIntegerValue(100 * scale_itr),
+    key1->SetValue(0, type::ValueFactory::GetIntegerValue(100 * scale_itr + thread_itr),
                    pool);
     key1->SetValue(1, type::ValueFactory::GetVarcharValue("b"), pool);
-    key2->SetValue(0, type::ValueFactory::GetIntegerValue(100 * scale_itr),
+    key2->SetValue(0, type::ValueFactory::GetIntegerValue(100 * scale_itr + thread_itr),
                    pool);
     key2->SetValue(1, type::ValueFactory::GetVarcharValue("c"), pool);
-    key3->SetValue(0, type::ValueFactory::GetIntegerValue(400 * scale_itr),
+    key3->SetValue(0, type::ValueFactory::GetIntegerValue(400 * scale_itr + thread_itr),
                    pool);
     key3->SetValue(1, type::ValueFactory::GetVarcharValue("d"), pool);
-    key4->SetValue(0, type::ValueFactory::GetIntegerValue(500 * scale_itr),
+    key4->SetValue(0, type::ValueFactory::GetIntegerValue(500 * scale_itr + thread_itr),
                    pool);
     key4->SetValue(
         1, type::ValueFactory::GetVarcharValue(StringUtil::Repeat("e", 1000)),
         pool);
-    keynonce->SetValue(0, type::ValueFactory::GetIntegerValue(1000 * scale_itr),
+    keynonce->SetValue(0, type::ValueFactory::GetIntegerValue(1000 * scale_itr + thread_itr),
                        pool);
     keynonce->SetValue(1, type::ValueFactory::GetVarcharValue("f"), pool);
 
@@ -768,8 +777,8 @@ void TestingIndexUtil::InsertHelper(index::Index *index, type::AbstractPool *poo
     index->InsertEntry(key0.get(), item0.get());
     index->InsertEntry(key1.get(), item1.get());
     index->InsertEntry(key1.get(), item2.get());
-    index->InsertEntry(key1.get(), item1.get());
-    index->InsertEntry(key1.get(), item1.get());
+//    index->InsertEntry(key1.get(), item1.get());
+//    index->InsertEntry(key1.get(), item1.get());
     index->InsertEntry(key1.get(), item0.get());
 
     index->InsertEntry(key2.get(), item1.get());

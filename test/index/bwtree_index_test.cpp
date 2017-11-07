@@ -25,45 +25,45 @@ namespace test {
 
 class BwTreeIndexTests : public PelotonTest {};
 
-TEST_F(BwTreeIndexTests, BasicTest) {
-  TestingIndexUtil::BasicTest(IndexType::BWTREE);
-}
-
-TEST_F(BwTreeIndexTests, MultiMapInsertTest) {
-  TestingIndexUtil::MultiMapInsertTest(IndexType::BWTREE);
-}
-
-TEST_F(BwTreeIndexTests, UniqueKeyInsertTest) {
-  TestingIndexUtil::UniqueKeyInsertTest(IndexType::BWTREE);
-}
-
-//TEST_F(BwTreeIndexTests, UniqueKeyDeleteTest) {
-//  TestingIndexUtil::UniqueKeyDeleteTest(IndexType::BWTREE);
+//TEST_F(BwTreeIndexTests, BasicTest) {
+//  TestingIndexUtil::BasicTest(IndexType::BWTREE);
 //}
-
-TEST_F(BwTreeIndexTests, NonUniqueKeyDeleteTest) {
-  TestingIndexUtil::NonUniqueKeyDeleteTest(IndexType::BWTREE);
-}
+//
+//TEST_F(BwTreeIndexTests, MultiMapInsertTest) {
+//  TestingIndexUtil::MultiMapInsertTest(IndexType::BWTREE);
+//}
+//
+//TEST_F(BwTreeIndexTests, UniqueKeyInsertTest) {
+//  TestingIndexUtil::UniqueKeyInsertTest(IndexType::BWTREE);
+//}
+//
+////TEST_F(BwTreeIndexTests, UniqueKeyDeleteTest) {
+////  TestingIndexUtil::UniqueKeyDeleteTest(IndexType::BWTREE);
+////}
+//
+//TEST_F(BwTreeIndexTests, NonUniqueKeyDeleteTest) {
+//  TestingIndexUtil::NonUniqueKeyDeleteTest(IndexType::BWTREE);
+//}
 
 TEST_F(BwTreeIndexTests, MultiThreadedInsertTest) {
   TestingIndexUtil::MultiThreadedInsertTest(IndexType::BWTREE);
 }
 
-//TEST_F(BwTreeIndexTests, UniqueKeyMultiThreadedTest) {
-//  TestingIndexUtil::UniqueKeyMultiThreadedTest(IndexType::BWTREE);
+////TEST_F(BwTreeIndexTests, UniqueKeyMultiThreadedTest) {
+////  TestingIndexUtil::UniqueKeyMultiThreadedTest(IndexType::BWTREE);
+////}
+//
+//TEST_F(BwTreeIndexTests, NonUniqueKeyMultiThreadedTest) {
+//  TestingIndexUtil::NonUniqueKeyMultiThreadedTest(IndexType::BWTREE);
 //}
-
-TEST_F(BwTreeIndexTests, NonUniqueKeyMultiThreadedTest) {
-  TestingIndexUtil::NonUniqueKeyMultiThreadedTest(IndexType::BWTREE);
-}
-
-TEST_F(BwTreeIndexTests, NonUniqueKeyMultiThreadedStressTest) {
-  TestingIndexUtil::NonUniqueKeyMultiThreadedStressTest(IndexType::BWTREE);
-}
-
-TEST_F(BwTreeIndexTests, NonUniqueKeyMultiThreadedStressTest2) {
-  TestingIndexUtil::NonUniqueKeyMultiThreadedStressTest2(IndexType::BWTREE);
-}
+//
+//TEST_F(BwTreeIndexTests, NonUniqueKeyMultiThreadedStressTest) {
+//  TestingIndexUtil::NonUniqueKeyMultiThreadedStressTest(IndexType::BWTREE);
+//}
+//
+//TEST_F(BwTreeIndexTests, NonUniqueKeyMultiThreadedStressTest2) {
+//  TestingIndexUtil::NonUniqueKeyMultiThreadedStressTest2(IndexType::BWTREE);
+//}
 
 }  // namespace test
 }  // namespace peloton

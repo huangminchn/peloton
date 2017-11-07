@@ -37,7 +37,7 @@ namespace test {
 
 bool TestingArtUtil::map_populated = false;
 std::map<index::TID, index::Key *> TestingArtUtil::value_to_key;
-std::array<TestingArtUtil::KeyAndValues, 10000> TestingArtUtil::key_to_values;
+std::array<TestingArtUtil::KeyAndValues, 100000> TestingArtUtil::key_to_values;
 
 void loadKeyForTest(index::TID tid, index::Key &key, UNUSED_ATTRIBUTE index::IndexMetadata *metadata) {
   index::MultiValues *value_list = reinterpret_cast<index::MultiValues *>(tid);
@@ -183,7 +183,7 @@ void TestingArtUtil::MultiThreadedInsertTest(UNUSED_ATTRIBUTE const IndexType in
     PopulateMap(artindex);
   }
 
-  int num_rows = 10000;
+  int num_rows = 100000;
 
   size_t scale_factor = 1;
   Timer<> timer;
@@ -355,13 +355,15 @@ storage::DataTable *TestingArtUtil::CreateTable(
 
 void TestingArtUtil::PopulateMap(UNUSED_ATTRIBUTE index::Index &index) {
 //  auto key_schema = index.GetKeySchema();
+//  catalog::Schema *table_schema = new catalog::Schema(
+//    {TestingExecutorUtil::GetColumnInfo(0), TestingExecutorUtil::GetColumnInfo(1)});
 
   // Random values
   std::srand(std::time(nullptr));
   std::unordered_set<uint64_t> values_set;
 //  auto testing_pool = TestingHarness::GetInstance().GetTestingPool();
 
-  for (int i = 0; i < 10000; i++) {
+  for (int i = 0; i < 100000; i++) {
     // create the key
     int populate_value = i;
 
@@ -369,15 +371,17 @@ void TestingArtUtil::PopulateMap(UNUSED_ATTRIBUTE index::Index &index) {
       TestingExecutorUtil::PopulatedValue(populate_value, 0));
 
     auto v1 = type::ValueFactory::GetIntegerValue(
-      TestingExecutorUtil::PopulatedValue(std::rand() % (10000 / 3), 1));
+      TestingExecutorUtil::PopulatedValue(std::rand() % (100000 / 3), 1));
 
     char *c = new char[8];
     index::ArtIndex::WriteValueInBytes(v0, c, 0, 4);
     index::ArtIndex::WriteValueInBytes(v1, c, 4, 4);
 
-//    storage::Tuple *key = new storage::Tuple(key_schema, true);
+//    storage::Tuple *key = new storage::Tuple(table_schema, true);
 //    key->SetValue(0, v0, testing_pool);
 //    key->SetValue(1, v1, testing_pool);
+//
+//    printf("%d\n", key->GetLength());
 
     index::Key index_key;
 //    index::ArtIndex::WriteIndexedAttributesInKey(key, index_key);
