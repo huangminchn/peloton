@@ -57,6 +57,8 @@ public:
 
   void setKeyLen(KeyLen len);
 
+  void copyAndAppend(Key &key, uint64_t tuple_p);
+
 };
 
 
@@ -102,6 +104,28 @@ inline void Key::set(const char bytes[], const std::size_t length) {
     memcpy(data, bytes, length);
   }
   len = length;
+}
+
+inline void Key::copyAndAppend(Key &key, uint64_t tuple_p) {
+  if (len > stackLen) {
+    delete[] data;
+  }
+  if (len <= stackLen) {
+    memcpy(stackKey, key.data, key.getKeyLen());
+    data = stackKey;
+  } else {
+    data = new uint8_t[len];
+    memcpy(data, key.data, key.getKeyLen());
+  }
+  int offset = key.getKeyLen();
+  data[offset] = (tuple_p >> 56) & 0xFF;
+  data[offset + 1] = (tuple_p >> 48) & 0xFF;
+  data[offset + 2] = (tuple_p >> 40) & 0xFF;
+  data[offset + 3] = (tuple_p >> 32) & 0xFF;
+  data[offset + 4] = (tuple_p >> 24) & 0xFF;
+  data[offset + 5] = (tuple_p >> 16) & 0xFF;
+  data[offset + 6] = (tuple_p >> 8) & 0xFF;
+  data[offset + 7] = tuple_p & 0xFF;
 }
 
 inline void Key::operator=(const char key[]) {

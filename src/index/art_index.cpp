@@ -134,9 +134,6 @@ void loadKey(TID tid, Key &key, IndexMetadata *metadata) {
   // Store the key of the tuple into the key vector
   // Implementation is database specific
 
-  // use the first value in the value list
-  MultiValues *value_list = reinterpret_cast<MultiValues *>(tid);
-
   int columnCount = metadata->GetColumnCount();
 
   std::vector<oid_t> indexedColumns = metadata->GetKeySchema()->GetIndexedColumns();
@@ -146,7 +143,7 @@ void loadKey(TID tid, Key &key, IndexMetadata *metadata) {
 
   // TODO: recover key from tuple_pointer (recover a storage::Tuple from ItemPointer)
   auto &manager = catalog::Manager::GetInstance();
-  ItemPointer *tuple_pointer = (ItemPointer *) (value_list->tid);
+  ItemPointer *tuple_pointer = (ItemPointer *) (tid);
   ItemPointer tuple_location = *tuple_pointer;
   auto tile_group = manager.GetTileGroup(tuple_location.block);
   ContainerTuple<storage::TileGroup> tuple(tile_group.get(), tuple_location.offset);
@@ -231,7 +228,8 @@ ArtIndex::ArtIndex(IndexMetadata *metadata)
 ArtIndex::~ArtIndex() {}
 
 
-void ArtIndex::WriteIndexedAttributesInKey(const storage::Tuple *tuple, Key& index_key) {
+void ArtIndex::WriteIndexedAttributesInKey(const storage::Tuple *tuple, Key& index_key,
+                                           uint64_t tuple_p, bool append_tuple_id) {
   int columnsInKey = tuple->GetColumnCount();
 
   const catalog::Schema *tuple_schema = tuple->GetSchema();
@@ -241,8 +239,10 @@ void ArtIndex::WriteIndexedAttributesInKey(const storage::Tuple *tuple, Key& ind
     total_bytes += columns[i].GetLength();
   }
 
-//  // include the tuple id in the key so that duplicate key becomes unique keys
-//  total_bytes += 8;
+  // include the tuple id in the key so that duplicate key becomes unique keys
+  if (append_tuple_id) {
+    total_bytes += 8;
+  }
 
   char *c = new char[total_bytes];
   int offset = 0;
@@ -254,16 +254,18 @@ void ArtIndex::WriteIndexedAttributesInKey(const storage::Tuple *tuple, Key& ind
 
   }
 
-//  // append the tuple id to the key
-//  // pointer is unsigned long
-//  c[offset] = (tuple_id >> 56) & 0xFF;
-//  c[offset + 1] = (tuple_id >> 48) & 0xFF;
-//  c[offset + 2] = (tuple_id >> 40) & 0xFF;
-//  c[offset + 3] = (tuple_id >> 32) & 0xFF;
-//  c[offset + 4] = (tuple_id >> 24) & 0xFF;
-//  c[offset + 5] = (tuple_id >> 16) & 0xFF;
-//  c[offset + 6] = (tuple_id >> 8) & 0xFF;
-//  c[offset + 7] = tuple_id & 0xFF;
+  if (append_tuple_id) {
+    // append the tuple id to the key
+    // pointer is unsigned long
+    c[offset] = (tuple_p >> 56) & 0xFF;
+    c[offset + 1] = (tuple_p >> 48) & 0xFF;
+    c[offset + 2] = (tuple_p >> 40) & 0xFF;
+    c[offset + 3] = (tuple_p >> 32) & 0xFF;
+    c[offset + 4] = (tuple_p >> 24) & 0xFF;
+    c[offset + 5] = (tuple_p >> 16) & 0xFF;
+    c[offset + 6] = (tuple_p >> 8) & 0xFF;
+    c[offset + 7] = tuple_p & 0xFF;
+  }
 
   index_key.set(c, total_bytes);
   index_key.setKeyLen(total_bytes);
@@ -285,7 +287,7 @@ bool ArtIndex::InsertEntry(
 
   Key index_key;
 
-  WriteIndexedAttributesInKey(key, index_key);
+  WriteIndexedAttributesInKey(key, index_key, (uint64_t) value, true);
 
   auto &t = artTree.getThreadInfo();
   artTree.insert(index_key, reinterpret_cast<TID>(value), t, ret);
@@ -326,20 +328,36 @@ void ArtIndex::ScanKey(
   Key index_key;
 //  index_key.set(key->GetData(), key->GetLength());
 //  index_key.setKeyLen(key->GetLength());
-  WriteIndexedAttributesInKey(key, index_key);
+  WriteIndexedAttributesInKey(key, index_key, 0, false);
+
+  Key lower_index_key;
+  lower_index_key.setKeyLen(index_key.getKeyLen() + 8);
+  lower_index_key.copyAndAppend(index_key, 0lu);
+
+  Key upper_index_key;
+  upper_index_key.setKeyLen(index_key.getKeyLen() + 8);
+  upper_index_key.copyAndAppend(index_key, static_cast<uint64_t>(-1));
 
   auto &t = artTree.getThreadInfo();
-  TID value = artTree.lookup(index_key, t);
-  if (value != 0) {
-//    ItemPointer *value_pointer = (ItemPointer *) value;
-//    result.push_back(value_pointer);
-    MultiValues *value_list = reinterpret_cast<MultiValues *>(value);
-    while (value_list != nullptr) {
-      ItemPointer *value_pointer = (ItemPointer *) (value_list->tid);
-      result.push_back(value_pointer);
-      value_list = value_list->next;
-    }
-  }
+  std::size_t range = 1000;
+  std::size_t actual_result_length = 0;
+//    TID results[range];
+
+  artTree.lookupNonUniqueKey(lower_index_key, upper_index_key, index_key, result, range,
+                      actual_result_length, t);
+
+//  auto &t = artTree.getThreadInfo();
+//  TID value = artTree.lookup(index_key, t);
+//  if (value != 0) {
+////    ItemPointer *value_pointer = (ItemPointer *) value;
+////    result.push_back(value_pointer);
+//    MultiValues *value_list = reinterpret_cast<MultiValues *>(value);
+//    while (value_list != nullptr) {
+//      ItemPointer *value_pointer = (ItemPointer *) (value_list->tid);
+//      result.push_back(value_pointer);
+//      value_list = value_list->next;
+//    }
+//  }
   return;
 }
 
@@ -356,7 +374,7 @@ bool ArtIndex::DeleteEntry(
   Key index_key;
 //  index_key.set(key->GetData(), key->GetLength());
 //  index_key.setKeyLen(key->GetLength());
-  WriteIndexedAttributesInKey(key, index_key);
+  WriteIndexedAttributesInKey(key, index_key, (uint64_t) value, true);
 
   TID tid = reinterpret_cast<TID>(value);
 
@@ -382,9 +400,9 @@ bool ArtIndex::CondInsertEntry(
   const storage::Tuple *key,
   ItemPointer *value,
   std::function<bool(const void *)> predicate) {
-
+  printf("conditional insert\n");
   Key index_key;
-  WriteIndexedAttributesInKey(key, index_key);
+  WriteIndexedAttributesInKey(key, index_key, (uint64_t) value, true);
   TID tid = reinterpret_cast<TID>(value);
   auto &t = artTree.getThreadInfo();
   return artTree.conditionalInsert(index_key, tid, t, predicate);
@@ -421,26 +439,16 @@ void ArtIndex::Scan(
 //    index_low_key.setKeyLen(low_key_p->GetLength());
 //    index_high_key.set(high_key_p->GetData(), high_key_p->GetLength());
 //    index_high_key.setKeyLen(high_key_p->GetLength());
-    WriteIndexedAttributesInKey(low_key_p, index_low_key);
-    WriteIndexedAttributesInKey(high_key_p, index_high_key);
+    WriteIndexedAttributesInKey(low_key_p, index_low_key, 0, false);
+    WriteIndexedAttributesInKey(high_key_p, index_high_key, 0, false);
 
-    // check whether they are the same key; if so, use lookup
-    bool sameKey = true;
-    if (index_low_key.getKeyLen() != index_high_key.getKeyLen()) {
-      sameKey = false;
-    } else {
-      for (unsigned int i = 0; i < index_low_key.getKeyLen(); i++) {
-        if (index_low_key.data[i] != index_high_key.data[i]) {
-          sameKey = false;
-          break;
-        }
-      }
-    }
+    Key index_low_key_tuple;
+    index_low_key_tuple.setKeyLen(index_low_key.getKeyLen() + 8);
+    index_low_key_tuple.copyAndAppend(index_low_key, 0lu);
 
-    if (sameKey) {
-      ScanKey(low_key_p, result);
-      return;
-    }
+    Key index_high_key_tuple;
+    index_high_key_tuple.setKeyLen(index_high_key.getKeyLen() + 8);
+    index_high_key_tuple.copyAndAppend(index_high_key, static_cast<uint64_t>(-1));
 
     // TODO: how do I know the result length before scanning?
     std::size_t range = 1000;
@@ -448,8 +456,8 @@ void ArtIndex::Scan(
 //    TID results[range];
 
     auto &t = artTree.getThreadInfo();
-    artTree.lookupRange(index_low_key, index_high_key, continue_key, result, range,
-      actual_result_length, t);
+    artTree.lookupRange(index_low_key_tuple, index_high_key_tuple, continue_key, index_low_key, index_high_key,
+                        result, range, actual_result_length, t);
 
 //    for (std::size_t i = 0; i < actual_result_length; i++) {
 //      ItemPointer *value_pointer = (ItemPointer *) results[i];

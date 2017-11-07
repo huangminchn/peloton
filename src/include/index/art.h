@@ -57,9 +57,9 @@ public:
                                                              Prefix &nonMatchingPrefix,
                                                              LoadKeyFunction loadKey, bool &needRestart, IndexMetadata *metadata);
 
-  static PCCompareResults checkPrefixCompare(const N* n, const Key &k, uint8_t fillKey, uint32_t &level, LoadKeyFunction loadKey, bool &needRestart, IndexMetadata *metadata);
+  static PCCompareResults checkPrefixCompare(const N* n, const Key &k, uint8_t fillKey, const Key &realKey, uint32_t &level, LoadKeyFunction loadKey, bool &needRestart, IndexMetadata *metadata);
 
-  static PCEqualsResults checkPrefixEquals(const N* n, uint32_t &level, const Key &start, const Key &end, LoadKeyFunction loadKey, bool &needRestart, IndexMetadata *metadata);
+  static PCEqualsResults checkPrefixEquals(const N* n, uint32_t &level, const Key &start, const Key &end, const Key &realStart, const Key &realEnd, LoadKeyFunction loadKey, bool &needRestart, IndexMetadata *metadata);
 
 public:
 
@@ -75,7 +75,10 @@ public:
 
   TID lookup(const Key &k, ThreadInfo &threadEpocheInfo) const;
 
-  bool lookupRange(const Key &start, const Key &end, Key &continueKey, std::vector<ItemPointer *> &result, std::size_t resultLen,
+  bool lookupNonUniqueKey(const Key &start, const Key &end, Key &realKey, std::vector<ItemPointer *> &result, std::size_t resultLen,
+                          std::size_t &resultCount, ThreadInfo &threadEpocheInfo) const;
+
+  bool lookupRange(const Key &start, const Key &end, Key &continueKey, Key &realStart, Key &realEnd, std::vector<ItemPointer *> &result, std::size_t resultLen,
                    std::size_t &resultCount, ThreadInfo &threadEpocheInfo) const;
 
   void fullScan(std::vector<ItemPointer *> &result, std::size_t &resultCount, ThreadInfo &threadEpocheInfo) const;
