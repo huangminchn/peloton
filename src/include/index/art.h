@@ -57,9 +57,18 @@ public:
                                                              Prefix &nonMatchingPrefix,
                                                              LoadKeyFunction loadKey, bool &needRestart, IndexMetadata *metadata);
 
+  static CheckPrefixPessimisticResult checkPrefixPessimisticConditional(uint64_t &version, N *n, const Key &k, const Key &realKey, uint32_t &level,
+                                                                        uint32_t realKeyLen, uint8_t &nonMatchingKey,
+                                                                        Prefix &nonMatchingPrefix, LoadKeyFunction loadKey,
+                                                                        bool &needRestart, IndexMetadata *metadata,
+                                                                        bool isCondInsert, std::function<bool(const void *)> predicate,
+                                                                        TID val, bool &foundEndOfKey, bool &insertCondition);
+
   static PCCompareResults checkPrefixCompare(const N* n, const Key &k, uint8_t fillKey, const Key &realKey, uint32_t &level, LoadKeyFunction loadKey, bool &needRestart, IndexMetadata *metadata);
 
   static PCEqualsResults checkPrefixEquals(const N* n, uint32_t &level, const Key &start, const Key &end, const Key &realStart, const Key &realEnd, LoadKeyFunction loadKey, bool &needRestart, IndexMetadata *metadata);
+
+  static bool checkAllValues(const N *n, TID val, std::function<bool(const void *)> predicate);
 
 public:
 
@@ -89,7 +98,7 @@ public:
 
   void remove(const Key &k, TID tid, ThreadInfo &epocheInfo);
 
-  bool conditionalInsert(const Key &k, TID tid, ThreadInfo &epocheInfo, std::function<bool(const void *)> predicate);
+  bool conditionalInsert(const Key &k, const Key &realKey, TID tid, ThreadInfo &epocheInfo, std::function<bool(const void *)> predicate);
 
   void setIndexMetadata(IndexMetadata *metadata);
 };

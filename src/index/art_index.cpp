@@ -400,12 +400,15 @@ bool ArtIndex::CondInsertEntry(
   const storage::Tuple *key,
   ItemPointer *value,
   std::function<bool(const void *)> predicate) {
-  printf("conditional insert\n");
-  Key index_key;
-  WriteIndexedAttributesInKey(key, index_key, (uint64_t) value, true);
+  Key index_key, real_key;
   TID tid = reinterpret_cast<TID>(value);
+
+  WriteIndexedAttributesInKey(key, real_key, 0, false);
+  index_key.setKeyLen(real_key.getKeyLen() + 8);
+  index_key.copyAndAppend(real_key, tid);
+
   auto &t = artTree.getThreadInfo();
-  return artTree.conditionalInsert(index_key, tid, t, predicate);
+  return artTree.conditionalInsert(index_key, real_key, tid, t, predicate);
 }
 
 /*

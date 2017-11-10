@@ -149,6 +149,53 @@ void N::insertGrow(curN *n, uint64_t v, N *parentNode, uint64_t parentVersion, u
   parentNode->writeUnlock();
 }
 
+template<typename curN, typename biggerN>
+void N::insertGrowCond(curN *n, N *lockedNode, uint64_t v, N *parentNode, uint64_t parentVersion, uint8_t keyParent, uint8_t key, N *val, bool &needRestart, ThreadInfo &threadInfo, bool &lockedNodeIsObsolete) {
+  if (!n->isFull()) {
+    if (parentNode != nullptr && parentNode != lockedNode) {
+      parentNode->readUnlockOrRestart(parentVersion, needRestart);
+      if (needRestart) return;
+    }
+    if (n != lockedNode) {
+      n->upgradeToWriteLockOrRestart(v, needRestart);
+    }
+    if (needRestart) return;
+    n->insert(key, val);
+    if (n != lockedNode) {
+      n->writeUnlock();
+    }
+    return;
+  }
+
+  if (parentNode != lockedNode) {
+    parentNode->upgradeToWriteLockOrRestart(parentVersion, needRestart);
+    if (needRestart) return;
+  }
+
+  if (n != lockedNode) {
+    n->upgradeToWriteLockOrRestart(v, needRestart);
+    if (needRestart) {
+      parentNode->writeUnlock();
+      return;
+    }
+  }
+
+  auto nBig = new biggerN(n->getPrefix(), n->getPrefixLength());
+  n->copyTo(nBig);
+  nBig->insert(key, val);
+
+  N::change(parentNode, keyParent, nBig);
+
+  if (n == lockedNode) {
+    lockedNodeIsObsolete = true;
+  }
+  n->writeUnlockObsolete();
+  threadInfo.getEpoche().markNodeForDeletion(n, threadInfo);
+  if (parentNode != lockedNode) {
+    parentNode->writeUnlock();
+  }
+}
+
 void N::insertAndUnlock(N *node, uint64_t v, N *parentNode, uint64_t parentVersion, uint8_t keyParent, uint8_t key, N *val, bool &needRestart, ThreadInfo &threadInfo) {
   switch (node->getType()) {
     case NTypes::N4: {
@@ -169,6 +216,31 @@ void N::insertAndUnlock(N *node, uint64_t v, N *parentNode, uint64_t parentVersi
     case NTypes::N256: {
       auto n = static_cast<N256 *>(node);
       insertGrow<N256, N256>(n, v, parentNode, parentVersion, keyParent, key, val, needRestart, threadInfo);
+      break;
+    }
+  }
+}
+
+void N::insertAndUnlockCond(N *node, N *lockedNode, uint64_t v, N *parentNode, uint64_t parentVersion, uint8_t keyParent, uint8_t key, N *val, bool &needRestart, ThreadInfo &threadInfo, bool &lockedNodeIsObsolete) {
+  switch (node->getType()) {
+    case NTypes::N4: {
+      auto n = static_cast<N4 *>(node);
+      insertGrowCond<N4, N16>(n, lockedNode, v, parentNode, parentVersion, keyParent, key, val, needRestart, threadInfo, lockedNodeIsObsolete);
+      break;
+    }
+    case NTypes::N16: {
+      auto n = static_cast<N16 *>(node);
+      insertGrowCond<N16, N48>(n, lockedNode, v, parentNode, parentVersion, keyParent, key, val, needRestart, threadInfo, lockedNodeIsObsolete);
+      break;
+    }
+    case NTypes::N48: {
+      auto n = static_cast<N48 *>(node);
+      insertGrowCond<N48, N256>(n, lockedNode, v, parentNode, parentVersion, keyParent, key, val, needRestart, threadInfo, lockedNodeIsObsolete);
+      break;
+    }
+    case NTypes::N256: {
+      auto n = static_cast<N256 *>(node);
+      insertGrowCond<N256, N256>(n, lockedNode, v, parentNode, parentVersion, keyParent, key, val, needRestart, threadInfo, lockedNodeIsObsolete);
       break;
     }
   }

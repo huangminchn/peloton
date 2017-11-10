@@ -101,6 +101,9 @@ public:
   static void insertAndUnlock(N *node, uint64_t v, N *parentNode, uint64_t parentVersion, uint8_t keyParent, uint8_t key, N *val, bool &needRestart,
                               ThreadInfo &threadInfo);
 
+  static void insertAndUnlockCond(N *node, N *lockedNode, uint64_t v, N *parentNode, uint64_t parentVersion, uint8_t keyParent, uint8_t key, N *val, bool &needRestart,
+                              ThreadInfo &threadInfo, bool &lockedNodeIsObsolete);
+
   static bool change(N *node, uint8_t key, N *val);
 
   static bool addMultiValue(N *node, uint8_t key, uint64_t val);
@@ -137,6 +140,9 @@ public:
 
   template<typename curN, typename biggerN>
   static void insertGrow(curN *n, uint64_t v, N *parentNode, uint64_t parentVersion, uint8_t keyParent, uint8_t key, N *val, bool &needRestart, ThreadInfo &threadInfo);
+
+  template<typename curN, typename biggerN>
+  static void insertGrowCond(curN *n, N *lockedNode, uint64_t v, N *parentNode, uint64_t parentVersion, uint8_t keyParent, uint8_t key, N *val, bool &needRestart, ThreadInfo &threadInfo, bool &lockedNodeIsObsolete);
 
   template<typename curN, typename smallerN>
   static void removeAndShrink(curN *n, uint64_t v, N *parentNode, uint64_t parentVersion, uint8_t keyParent, uint8_t key, bool &needRestart, ThreadInfo &threadInfo);

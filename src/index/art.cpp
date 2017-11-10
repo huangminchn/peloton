@@ -780,7 +780,7 @@ void Tree::insert(const Key &k, TID tid, ThreadInfo &epocheInfo, bool &insertSuc
   }
 }
 
-bool Tree::conditionalInsert(const Key &k, TID tid, ThreadInfo &epocheInfo, std::function<bool(const void *)> predicate) {
+bool Tree::conditionalInsert(const Key &k, const Key &realKey, TID tid, ThreadInfo &epocheInfo, std::function<bool(const void *)> predicate) {
   EpocheGuard epocheGuard(epocheInfo);
   int restartCount = 0;
   restart:
@@ -791,9 +791,13 @@ bool Tree::conditionalInsert(const Key &k, TID tid, ThreadInfo &epocheInfo, std:
   N *node = nullptr;
   N *nextNode = root;
   N *parentNode = nullptr;
+  N *lockedNode = nullptr;
   uint8_t parentKey, nodeKey = 0;
   uint64_t parentVersion = 0;
   uint32_t level = 0;
+  uint32_t realKeyLength = realKey.getKeyLen();
+  bool foundEndOfKey = false;
+  bool insertCondition = true;
 
   while (true) {
     parentNode = node;
@@ -806,18 +810,28 @@ bool Tree::conditionalInsert(const Key &k, TID tid, ThreadInfo &epocheInfo, std:
 
     uint8_t nonMatchingKey;
     Prefix remainingPrefix;
-    auto res = checkPrefixPessimistic(node, k, nextLevel, nonMatchingKey, remainingPrefix,
-                                      this->loadKey, needRestart, metadata); // increases level
+    auto res = checkPrefixPessimisticConditional(v, node, k, realKey, nextLevel, realKeyLength, nonMatchingKey, remainingPrefix,
+                                                 this->loadKey, needRestart, metadata, true, predicate, tid, foundEndOfKey, insertCondition); // increases level
+
+    if (foundEndOfKey && !insertCondition) {
+      return false;
+    } else if (foundEndOfKey && insertCondition) {
+      lockedNode = node;
+    }
     if (needRestart) goto restart;
     switch (res) {
       case CheckPrefixPessimisticResult::NoMatch: {
-        parentNode->upgradeToWriteLockOrRestart(parentVersion, needRestart);
-        if (needRestart) goto restart;
+        if (parentNode != lockedNode) {
+          parentNode->upgradeToWriteLockOrRestart(parentVersion, needRestart);
+          if (needRestart) goto restart;
+        }
 
-        node->upgradeToWriteLockOrRestart(v, needRestart);
-        if (needRestart) {
-          parentNode->writeUnlock();
-          goto restart;
+        if (node != lockedNode) {
+          node->upgradeToWriteLockOrRestart(v, needRestart);
+          if (needRestart) {
+            parentNode->writeUnlock();
+            goto restart;
+          }
         }
         // 1) Create new node which will be parent of node, Set common prefix, level to this node
         auto newNode = new N4(node->getPrefix(), nextLevel - level);
@@ -835,6 +849,9 @@ bool Tree::conditionalInsert(const Key &k, TID tid, ThreadInfo &epocheInfo, std:
                         node->getPrefixLength() - ((nextLevel - level) + 1));
 
         node->writeUnlock();
+        if (lockedNode != parentNode && lockedNode != node && lockedNode != nullptr) {
+          lockedNode->writeUnlock();
+        }
         return true;
       }
       case CheckPrefixPessimisticResult::Match:
@@ -847,57 +864,58 @@ bool Tree::conditionalInsert(const Key &k, TID tid, ThreadInfo &epocheInfo, std:
     if (needRestart) goto restart;
 
     if (nextNode == nullptr) {
-      N::insertAndUnlock(node, v, parentNode, parentVersion, parentKey, nodeKey, N::setLeaf(tid), needRestart, epocheInfo);
+      bool lockedNodeIsObsolete = false;
+      N::insertAndUnlockCond(node, lockedNode, v, parentNode, parentVersion, parentKey, nodeKey, N::setLeaf(tid), needRestart, epocheInfo, lockedNodeIsObsolete);
+      if (lockedNode != nullptr && !lockedNodeIsObsolete) {
+        lockedNode->writeUnlock();
+      }
       if (needRestart) goto restart;
       return true;
     }
 
-    if (parentNode != nullptr) {
+    if (parentNode != nullptr && parentNode != lockedNode) {
       parentNode->readUnlockOrRestart(parentVersion, needRestart);
       if (needRestart) goto restart;
     }
 
     if (N::isLeaf(nextNode)) {
-      node->upgradeToWriteLockOrRestart(v, needRestart);
-      if (needRestart) goto restart;
+      if (node != lockedNode) {
+        node->upgradeToWriteLockOrRestart(v, needRestart);
+        if (needRestart) goto restart;
+      }
 
       Key key;
-      loadKey(N::getLeaf(nextNode), key, metadata);
+      TID leafValue = N::getLeaf(nextNode);
+      loadKey(leafValue, key, metadata);
 
-      if (key == k) {
-        MultiValues *value_list = reinterpret_cast<MultiValues *>(N::getLeaf(nextNode));
-        while (value_list != nullptr) {
-          ItemPointer *value_pointer = (ItemPointer *) (value_list->tid);
-          if (predicate(value_pointer)) {
-            node->writeUnlock();
-            return false;
-          } else if ((uint64_t) value_pointer == tid) {
-            node->writeUnlock();
-            return false;
+      if (key == realKey) {
+        // check condition
+        if ((predicate != nullptr && predicate((ItemPointer *)leafValue)) || leafValue == tid) {
+          // don't insert
+          node->writeUnlock();
+          if (lockedNode != node && lockedNode != nullptr) {
+            lockedNode->writeUnlock();
           }
-          value_list = value_list->next;
+          return false;
         }
-
-        // upsert
-//        N::change(node, k[level], N::setLeaf(tid));
-//        printf("add another value for a non-unique key %llu\n", tid);
-//        N::addMultiValue(node, k[level], N::setLeaf(tid));
-        N::addMultiValue(node, k[level], tid);
-        node->writeUnlock();
-        return true;
       }
 
       level++;
       uint32_t prefixLength = 0;
-      while (key[level + prefixLength] == k[level + prefixLength]) {
+      Key keyWithTupleID;
+      keyWithTupleID.setKeyLen(key.getKeyLen() + 8);
+      keyWithTupleID.copyAndAppend(key, leafValue);
+      while (keyWithTupleID[level + prefixLength] == k[level + prefixLength]) {
         prefixLength++;
       }
-
       auto n4 = new N4(&k[level], prefixLength);
       n4->insert(k[level + prefixLength], N::setLeaf(tid));
-      n4->insert(key[level + prefixLength], nextNode);
+      n4->insert(keyWithTupleID[level + prefixLength], nextNode);
       N::change(node, k[level - 1], n4);
       node->writeUnlock();
+      if (lockedNode != node && lockedNode != nullptr) {
+        lockedNode->writeUnlock();
+      }
       return true;
     }
     level++;
@@ -1005,6 +1023,29 @@ void Tree::remove(const Key &k, TID tid, ThreadInfo &threadInfo) {
   }
 }
 
+bool Tree::checkAllValues(const N *node, TID val, std::function<bool(const void *)> predicate) {
+  if (N::isLeaf(node)) {
+    TID tid = N::getLeaf(node);
+    if (predicate != nullptr && predicate((ItemPointer *)tid)) {
+      return false;
+    } else if (tid == val) {
+      return false;
+    }
+    return true;
+  } else {
+    std::tuple<uint8_t, N *> children[256];
+    uint32_t childrenCount = 0;
+    N::getChildren(node, 0u, 255u, children, childrenCount);
+    for (uint32_t i = 0; i < childrenCount; ++i) {
+      const N *n = std::get<1>(children[i]);
+      if (!checkAllValues(n, val, predicate)) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
 inline typename Tree::CheckPrefixResult Tree::checkPrefix(N *n, const Key &k, uint32_t &level) {
   if (n->hasPrefix()) {
     if (k.getKeyLen() <= level + n->getPrefixLength()) {
@@ -1022,6 +1063,65 @@ inline typename Tree::CheckPrefixResult Tree::checkPrefix(N *n, const Key &k, ui
     }
   }
   return CheckPrefixResult::Match;
+}
+
+typename Tree::CheckPrefixPessimisticResult Tree::checkPrefixPessimisticConditional(uint64_t &version, N *n, const Key &k, const Key &realKey, uint32_t &level,
+                                                                                    uint32_t realKeyLen, uint8_t &nonMatchingKey,
+                                                                                    Prefix &nonMatchingPrefix, LoadKeyFunction loadKey, bool &needRestart,
+                                                                                    IndexMetadata *metadata, bool isCondInsert, std::function<bool(const void *)> predicate,
+                                                                                    TID val, bool &foundEndOfKey, bool &insertCondition) {
+  if (n->hasPrefix()) {
+    uint32_t prevLevel = level;
+    Key kt, tmpKey;
+    bool conditionCheck = false;
+    printf("n->getPrefixLength = %d\n", n->getPrefixLength());
+    for (uint32_t i = 0; i < n->getPrefixLength(); ++i) {
+      if (i >= maxStoredPrefixLength) {
+        break;
+      }
+      printf("prefix[%d] in node = %d\n", i, n->getPrefix()[i]);
+    }
+    for (uint32_t i = 0; i < n->getPrefixLength(); ++i) {
+      if (i == maxStoredPrefixLength) {
+        auto anyTID = N::getAnyChildTid(n, needRestart);
+        if (needRestart) return CheckPrefixPessimisticResult::Match;
+        loadKey(anyTID, tmpKey, metadata);
+        kt.setKeyLen(tmpKey.getKeyLen() + 8);
+        kt.copyAndAppend(tmpKey, anyTID);
+      }
+      if (isCondInsert && level >= realKeyLen && !conditionCheck &&realKey == tmpKey) {
+        // pause and check the condition
+        n->upgradeToWriteLockOrRestart(version, needRestart);
+        if (needRestart) return CheckPrefixPessimisticResult::Match;
+        foundEndOfKey = true;
+        insertCondition = checkAllValues(n, val, predicate);
+        if (!insertCondition) {
+          n->writeUnlock();
+          return CheckPrefixPessimisticResult::NoMatch;
+        }
+        conditionCheck = true;
+      }
+      uint8_t curKey = i >= maxStoredPrefixLength ? kt[level] : n->getPrefix()[i];
+      printf("level = %d key in prefix tree = %d key in inserted key = %d\n", level, curKey, k[level]);
+      if (curKey != k[level]) {
+        nonMatchingKey = curKey;
+        if (n->getPrefixLength() > maxStoredPrefixLength) {
+          if (i < maxStoredPrefixLength) {
+            auto anyTID = N::getAnyChildTid(n, needRestart);
+            if (needRestart) return CheckPrefixPessimisticResult::Match;
+            loadKey(anyTID, kt, metadata);
+          }
+          memcpy(nonMatchingPrefix, &kt[0] + level + 1, std::min((n->getPrefixLength() - (level - prevLevel) - 1),
+                                                                 maxStoredPrefixLength));
+        } else {
+          memcpy(nonMatchingPrefix, n->getPrefix() + i + 1, n->getPrefixLength() - i - 1);
+        }
+        return CheckPrefixPessimisticResult::NoMatch;
+      }
+      ++level;
+    }
+  }
+  return CheckPrefixPessimisticResult::Match;
 }
 
 typename Tree::CheckPrefixPessimisticResult Tree::checkPrefixPessimistic(N *n, const Key &k, uint32_t &level,
