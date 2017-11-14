@@ -219,15 +219,15 @@ void TestingIndexUtil::MultiThreadedInsertTest(const IndexType index_type) {
   const catalog::Schema *key_schema = index->GetKeySchema();
 
   // Parallel Test
-  size_t num_threads = 16;
-  size_t scale_factor = 14500;
+  size_t num_threads = 20;
+  size_t scale_factor = 200000;
 
   Timer<> timer;
   timer.Start();
   LaunchParallelTest(num_threads, TestingIndexUtil::InsertHelper, index.get(),
                      pool, scale_factor);
   timer.Stop();
-  printf("elapsed time = %.5lf\n", timer.GetDuration());
+  printf("%d tuples elapsed time = %.5lf\n", num_threads*scale_factor*5, timer.GetDuration());
 
   index->ScanAllKeys(location_ptrs);
   printf("tuple size = %lu\n", location_ptrs.size());
@@ -748,12 +748,12 @@ void TestingIndexUtil::InsertHelper(index::Index *index, type::AbstractPool *poo
     key1->SetValue(0, type::ValueFactory::GetIntegerValue(100 * scale_itr + thread_itr),
                    pool);
     key1->SetValue(1, type::ValueFactory::GetVarcharValue("b"), pool);
-    key2->SetValue(0, type::ValueFactory::GetIntegerValue(100 * scale_itr + thread_itr),
-                   pool);
-    key2->SetValue(1, type::ValueFactory::GetVarcharValue("c"), pool);
-    key3->SetValue(0, type::ValueFactory::GetIntegerValue(400 * scale_itr + thread_itr),
-                   pool);
-    key3->SetValue(1, type::ValueFactory::GetVarcharValue("d"), pool);
+    // key2->SetValue(0, type::ValueFactory::GetIntegerValue(100 * scale_itr + thread_itr),
+    //                pool);
+    // key2->SetValue(1, type::ValueFactory::GetVarcharValue("c"), pool);
+    // key3->SetValue(0, type::ValueFactory::GetIntegerValue(400 * scale_itr + thread_itr),
+    //                pool);
+    // key3->SetValue(1, type::ValueFactory::GetVarcharValue("d"), pool);
     key4->SetValue(0, type::ValueFactory::GetIntegerValue(500 * scale_itr + thread_itr),
                    pool);
     key4->SetValue(
@@ -781,8 +781,8 @@ void TestingIndexUtil::InsertHelper(index::Index *index, type::AbstractPool *poo
 //    index->InsertEntry(key1.get(), item1.get());
     index->InsertEntry(key1.get(), item0.get());
 
-    index->InsertEntry(key2.get(), item1.get());
-    index->InsertEntry(key3.get(), item1.get());
+    // index->InsertEntry(key2.get(), item1.get());
+    // index->InsertEntry(key3.get(), item1.get());
     index->InsertEntry(key4.get(), item1.get());
   }
 }
