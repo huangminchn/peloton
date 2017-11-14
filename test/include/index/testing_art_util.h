@@ -79,6 +79,9 @@ class TestingArtUtil {
   static void InsertHelperMicroBench(index::ArtIndex *index, int num_rows,
                                      UNUSED_ATTRIBUTE uint64_t thread_itr);
 
+  static void ReadHelperMicroBench(index::ArtIndex *index, int num_rows,
+                                     UNUSED_ATTRIBUTE uint64_t thread_itr);
+
   /**
    * Delete helper function
    */
@@ -95,11 +98,11 @@ class TestingArtUtil {
                                    UNUSED_ATTRIBUTE uint64_t thread_itr);
 
   struct KeyAndValues {
-    std::array<uint64_t, 16> values;
+    std::array<uint64_t, 20> values;
     index::ARTKey key;
     storage::Tuple *tuple;
   };
-  static std::array<KeyAndValues, 10000> key_to_values;
+  static std::array<KeyAndValues, 1000000> key_to_values;
   static std::map<index::TID, index::ARTKey *> value_to_key;
   static bool map_populated;
 
