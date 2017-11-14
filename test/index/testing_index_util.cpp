@@ -216,7 +216,7 @@ void TestingIndexUtil::MultiThreadedInsertTest(const IndexType index_type) {
   // INDEX
   std::unique_ptr<index::Index, void(*)(index::Index *)> index(
       TestingIndexUtil::BuildIndex(index_type, false), DestroyIndex);
-  const catalog::Schema *key_schema = index->GetKeySchema();
+  // const catalog::Schema *key_schema = index->GetKeySchema();
 
   // Parallel Test
   size_t num_threads = 20;
@@ -227,7 +227,7 @@ void TestingIndexUtil::MultiThreadedInsertTest(const IndexType index_type) {
   LaunchParallelTest(num_threads, TestingIndexUtil::InsertHelper, index.get(),
                      pool, scale_factor);
   timer.Stop();
-  printf("%d tuples elapsed time = %.5lf\n", num_threads*scale_factor*5, timer.GetDuration());
+  printf("%lu tuples elapsed time = %.5lf\n", num_threads*scale_factor*5, timer.GetDuration());
 
   index->ScanAllKeys(location_ptrs);
   printf("tuple size = %lu\n", location_ptrs.size());
