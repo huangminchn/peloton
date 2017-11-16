@@ -63,7 +63,7 @@ class IndexScanTranslator : public OperatorTranslator {
   const planner::IndexScanPlan &GetIndexScanPlan() const { return index_scan_; }
 
   // Table accessor
-  const index::ArtIndex &GetIndex() const;
+//  const index::ArtIndex &GetIndex() const;
 
  private:
   // The scan
@@ -73,7 +73,7 @@ class IndexScanTranslator : public OperatorTranslator {
   RuntimeState::StateID selection_vector_id_;
 
   // The code-generating table instance
-  codegen::ArtIndex index_;
+//  codegen::ArtIndex index_;
 };
 
 }

@@ -33,8 +33,10 @@ namespace codegen {
 IndexScanTranslator::IndexScanTranslator(const planner::IndexScanPlan &index_scan, CompilationContext &context,
                                          Pipeline &pipeline)
   : OperatorTranslator(context, pipeline),
-    index_scan_(index_scan),
-    index_(*index_scan_.GetIndex().get()) {
+    index_scan_(index_scan)
+//  ,
+//    index_(*index_scan_.GetIndex().get())
+{
   LOG_INFO("Constructing IndexScanTranslator ...");
 
 
@@ -51,9 +53,9 @@ IndexScanTranslator::IndexScanTranslator(const planner::IndexScanPlan &index_sca
 void IndexScanTranslator::Produce() const {
   printf("producing in index scan translator\n");
   auto &codegen = GetCodeGen();
-  auto &index = GetIndex();
-
-  LOG_INFO("IndexScan on [%s] starting to produce tuples ...", index.GetName().c_str());
+//  auto &index = GetIndex();
+//
+//  LOG_INFO("IndexScan on [%s] starting to produce tuples ...", index.GetName().c_str());
   storage::DataTable *table = index_scan_.GetTable();
   llvm::Value *table_ptr = (llvm::Value *)table;
 //  llvm::Value *tile_group_ptr = codegen.Call(DataTableProxy::GetTileGroup, {table_ptr, 0});
@@ -68,19 +70,20 @@ void IndexScanTranslator::Produce() const {
 
 // Get the stringified name of this scan
 std::string IndexScanTranslator::GetName() const {
-  std::string name = "Scan('" + GetIndex().GetName() + "'";
-  auto *predicate = GetIndexScanPlan().GetPredicate();
-  if (predicate != nullptr && predicate->IsSIMDable()) {
-    name.append(", ").append(std::to_string(Vector::kDefaultVectorSize));
-  }
-  name.append(")");
+//  std::string name = "Scan('" + GetIndex().GetName() + "'";
+//  auto *predicate = GetIndexScanPlan().GetPredicate();
+//  if (predicate != nullptr && predicate->IsSIMDable()) {
+//    name.append(", ").append(std::to_string(Vector::kDefaultVectorSize));
+//  }
+//  name.append(")");
+  std::string name = "haha";
   return name;
 }
 
-// Index accessor
-const index::ArtIndex &IndexScanTranslator::GetIndex() const {
-  return dynamic_cast<index::ArtIndex &> (*index_scan_.GetIndex().get());
-}
+//// Index accessor
+//const index::ArtIndex &IndexScanTranslator::GetIndex() const {
+//  return dynamic_cast<index::ArtIndex &> (*index_scan_.GetIndex().get());
+//}
 }
 }
 
