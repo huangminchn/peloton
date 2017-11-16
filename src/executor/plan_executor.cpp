@@ -110,6 +110,7 @@ void PlanExecutor::ExecutePlan(
   // Compile & execute the query
   codegen::QueryCompiler compiler;
   printf("before compiling\n");
+  printf("plan info = %s\n", plan->GetInfo().c_str());
   auto query = compiler.Compile(*plan, consumer);
   query->Execute(*txn, executor_context.get(),
                  reinterpret_cast<char *>(consumer.GetState()));

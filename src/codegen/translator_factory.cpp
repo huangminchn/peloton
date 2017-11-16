@@ -68,7 +68,9 @@ std::unique_ptr<OperatorTranslator> TranslatorFactory::CreateTranslator(
       break;
     }
     case PlanNodeType::INDEXSCAN: {
-      auto &index_scan = static_cast<const planner::IndexScanPlan &>(plan_node);
+      printf("try to construct a IndexScanTranslator\n");
+      auto &index_scan = dynamic_cast<const planner::IndexScanPlan &>(plan_node);
+      printf("good after casting; before constructing\n");
       translator = new IndexScanTranslator(index_scan, context, pipeline);
       break;
     }
