@@ -27,6 +27,7 @@ class ArtIndex : public Index {
 
  public:
   ArtIndex();
+  ArtIndex(ArtIndex const &) = delete;
   ArtIndex(IndexMetadata *metadata);
   ArtIndex(IndexMetadata *metadata,
            AdaptiveRadixTree::LoadKeyFunction loadKeyForTest);
