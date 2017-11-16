@@ -101,7 +101,7 @@ void PlanExecutor::ExecutePlan(
   // Perform binding
   planner::BindingContext context;
   plan->PerformBinding(context);
-
+  printf("after binding\n");
   // Prepare output buffer
   std::vector<oid_t> columns;
   plan->GetOutputColumns(columns);
@@ -109,6 +109,7 @@ void PlanExecutor::ExecutePlan(
 
   // Compile & execute the query
   codegen::QueryCompiler compiler;
+  printf("before compiling\n");
   auto query = compiler.Compile(*plan, consumer);
   query->Execute(*txn, executor_context.get(),
                  reinterpret_cast<char *>(consumer.GetState()));

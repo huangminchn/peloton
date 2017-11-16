@@ -35,7 +35,7 @@ IndexScanTranslator::IndexScanTranslator(const planner::IndexScanPlan &index_sca
   : OperatorTranslator(context, pipeline),
     index_scan_(index_scan),
     index_(*index_scan_.GetIndex().get()) {
-  LOG_DEBUG("Constructing IndexScanTranslator ...");
+  LOG_INFO("Constructing IndexScanTranslator ...");
 
 
   auto &codegen = GetCodeGen();
@@ -44,15 +44,16 @@ IndexScanTranslator::IndexScanTranslator(const planner::IndexScanPlan &index_sca
     "scanSelVec",
     codegen.ArrayType(codegen.Int32Type(), Vector::kDefaultVectorSize), true);
 
-  LOG_DEBUG("Finished constructing IndexScanTranslator ...");
+  LOG_INFO("Finished constructing IndexScanTranslator ...");
 }
 
 // Produce!
 void IndexScanTranslator::Produce() const {
+  printf("producing in index scan translator\n");
   auto &codegen = GetCodeGen();
   auto &index = GetIndex();
 
-  LOG_DEBUG("IndexScan on [%s] starting to produce tuples ...", index.GetName().c_str());
+  LOG_INFO("IndexScan on [%s] starting to produce tuples ...", index.GetName().c_str());
   storage::DataTable *table = index_scan_.GetTable();
   llvm::Value *table_ptr = (llvm::Value *)table;
 //  llvm::Value *tile_group_ptr = codegen.Call(DataTableProxy::GetTileGroup, {table_ptr, 0});

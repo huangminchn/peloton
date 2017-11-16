@@ -186,6 +186,7 @@ llvm::Function *CompilationContext::GeneratePlanFunction(
   // Create all local state
   runtime_state.CreateLocalState(codegen_);
 
+  printf("before producing root\n");
   // Generate the primary plan logic
   Produce(root);
 
