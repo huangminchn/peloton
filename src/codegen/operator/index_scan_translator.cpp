@@ -49,8 +49,22 @@ void IndexScanTranslator::Produce() const {
   auto &codegen = GetCodeGen();
   auto &index = GetIndex();
 
-  LOG_DEBUG("TableScan on [%s] starting to produce tuples ...", index.GetName().c_str());
+  LOG_DEBUG("IndexScan on [%s] starting to produce tuples ...", index.GetName().c_str());
 
+
+
+}
+
+
+// Get the stringified name of this scan
+std::string IndexScanTranslator::GetName() const {
+  std::string name = "Scan('" + GetIndex().GetName() + "'";
+  auto *predicate = GetIndexScanPlan().GetPredicate();
+  if (predicate != nullptr && predicate->IsSIMDable()) {
+    name.append(", ").append(std::to_string(Vector::kDefaultVectorSize));
+  }
+  name.append(")");
+  return name;
 }
 
 // Index accessor
