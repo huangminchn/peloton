@@ -356,7 +356,7 @@ bool IndexScanExecutor::ExecPrimaryIndexLookup() {
 }
 
 bool IndexScanExecutor::ExecSecondaryIndexLookup() {
-  LOG_TRACE("ExecSecondaryIndexLookup");
+  LOG_INFO("ExecSecondaryIndexLookup");
   PL_ASSERT(!done_);
   PL_ASSERT(index_->GetIndexType() != IndexConstraintType::PRIMARY_KEY);
 
@@ -372,35 +372,35 @@ bool IndexScanExecutor::ExecSecondaryIndexLookup() {
     if (limit_) {
       // invoke index scan limit
       if (!descend_) {
-        LOG_TRACE("ASCENDING SCAN LIMIT in Secondary Index");
+        LOG_INFO("ASCENDING SCAN LIMIT in Secondary Index");
         index_->ScanLimit(values_, key_column_ids_, expr_types_,
                           ScanDirectionType::FORWARD, tuple_location_ptrs,
                           &index_predicate_.GetConjunctionList()[0],
                           limit_number_, limit_offset_);
       } else {
-        LOG_TRACE("DESCENDING SCAN LIMIT in Secondary Index");
+        LOG_INFO("DESCENDING SCAN LIMIT in Secondary Index");
         index_->ScanLimit(values_, key_column_ids_, expr_types_,
                           ScanDirectionType::BACKWARD, tuple_location_ptrs,
                           &index_predicate_.GetConjunctionList()[0],
                           limit_number_, limit_offset_);
 
         if (tuple_location_ptrs.size() == 0) {
-          LOG_TRACE("2-Result size is %lu", tuple_location_ptrs.size());
+          LOG_INFO("2-Result size is %lu", tuple_location_ptrs.size());
         }
       }
     }
     // Normal SQL (without limit)
     else {
-      LOG_TRACE("Index Scan in Secondary Index");
+      LOG_INFO("Index Scan in Secondary Index");
       index_->Scan(values_, key_column_ids_, expr_types_,
                    ScanDirectionType::FORWARD, tuple_location_ptrs,
                    &index_predicate_.GetConjunctionList()[0]);
-      LOG_TRACE("size of result tuple = %lu", tuple_location_ptrs.size());
+      LOG_INFO("size of result tuple = %lu", tuple_location_ptrs.size());
     }
   }
 
   if (tuple_location_ptrs.size() == 0) {
-    LOG_TRACE("no tuple is retrieved from index.");
+    LOG_INFO("no tuple is retrieved from index.");
     return false;
   }
 

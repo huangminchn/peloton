@@ -146,14 +146,14 @@ ResultType TrafficCop::ExecuteStatement(
     stats::BackendStatsContext::GetInstance()->InitQueryMetric(statement,
                                                                param_stats);
   }
-  LOG_TRACE("Execute Statement of name: %s",
+  LOG_INFO("Execute Statement of name: %s",
             statement->GetStatementName().c_str());
-  LOG_TRACE("Execute Statement of query: %s",
+  LOG_INFO("Execute Statement of query: %s",
             statement->GetQueryString().c_str());
-  LOG_TRACE("Execute Statement Plan:\n%s",
+  LOG_INFO("Execute Statement Plan:\n%s",
             planner::PlanUtil::GetInfo(statement->GetPlanTree().get()).c_str());
-  LOG_TRACE("Execute Statement Query Type: %s", statement->GetQueryTypeString().c_str());
-  LOG_TRACE("----QueryType: %d--------", (int)statement->GetQueryType());
+  LOG_INFO("Execute Statement Query Type: %s", statement->GetQueryTypeString().c_str());
+  LOG_INFO("----QueryType: %d--------", (int)statement->GetQueryType());
   try {
     switch (statement->GetQueryType()) {
       case QueryType::QUERY_BEGIN:

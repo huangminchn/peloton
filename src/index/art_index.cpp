@@ -185,9 +185,11 @@ void ArtIndex::Scan(
     UNUSED_ATTRIBUTE ScanDirectionType scan_direction,
     std::vector<ItemPointer *> &result, const ConjunctionScanPredicate *csp_p) {
   if (csp_p->IsPointQuery() == true) {
+    LOG_INFO("point query");
     const storage::Tuple *point_query_key_p = csp_p->GetPointQueryKey();
     ScanKey(point_query_key_p, result);
   } else if (csp_p->IsFullIndexScan() == true) {
+    LOG_INFO("full scan");
     if (scan_direction == ScanDirectionType::FORWARD) {
       ScanAllKeys(result);
     } else if (scan_direction == ScanDirectionType::BACKWARD) {
@@ -195,6 +197,7 @@ void ArtIndex::Scan(
     }
   } else {
     // range scan
+    LOG_INFO("range scan");
     const storage::Tuple *low_key_p = csp_p->GetLowKey();
     const storage::Tuple *high_key_p = csp_p->GetHighKey();
 
