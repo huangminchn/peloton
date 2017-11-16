@@ -42,6 +42,9 @@ class RuntimeFunctions {
   static storage::TileGroup *GetTileGroup(storage::DataTable *table,
                                           uint64_t tile_group_index);
 
+  static storage::TileGroup *GetTileGroupByGlobalId(storage::DataTable *table,
+                                                    uint64_t tile_group_id);
+
   // This struct represents the layout (or configuration) of a column in a
   // tile group. A configuration is characterized by two properties: its
   // starting address and its stride.  The former indicates where in memory

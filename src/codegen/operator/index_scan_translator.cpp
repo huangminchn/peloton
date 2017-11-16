@@ -10,6 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "codegen/proxy/runtime_functions_proxy.h"
 #include "codegen/operator/index_scan_translator.h"
 
 #include "codegen/lang/if.h"
@@ -18,6 +19,8 @@
 #include "codegen/type/boolean_type.h"
 #include "planner/index_scan_plan.h"
 #include "index/art_index.h"
+#include "storage/data_table.h"
+#include "codegen/proxy/data_table_proxy.h"
 
 namespace peloton {
 namespace codegen {
@@ -50,8 +53,14 @@ void IndexScanTranslator::Produce() const {
   auto &index = GetIndex();
 
   LOG_DEBUG("IndexScan on [%s] starting to produce tuples ...", index.GetName().c_str());
-
-
+  storage::DataTable *table = index_scan_.GetTable();
+  llvm::Value *table_ptr = (llvm::Value *)table;
+//  llvm::Value *tile_group_ptr = codegen.Call(DataTableProxy::GetTileGroup, {table_ptr, 0});
+//  llvm::Value tile_id = (llvm::Value)13;
+  llvm::Value *tile_group_ptr = codegen.Call(RuntimeFunctionsProxy::GetTileGroupByGlobalId, {table_ptr, codegen.Const32(13)});
+  std::vector<llvm::Value *> debug_values;
+  debug_values.push_back(tile_group_ptr);
+  codegen.CallPrintf("tile group ptr = %d", debug_values);
 
 }
 
