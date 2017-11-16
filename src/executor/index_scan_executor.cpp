@@ -436,9 +436,15 @@ bool IndexScanExecutor::ExecSecondaryIndexLookup() {
 
     auto &plan = GetPlanNode<planner::IndexScanPlan>();
     storage::DataTable *table = plan.GetTable();
-    std::shared_ptr<storage::TileGroup> debug_tile_group = table->GetTileGroup(tuple_location.block);
+    printf("block = %d offset = %d index name = %s\n", tuple_location.block, tuple_location.offset, index_->GetName().c_str());
     printf("tile group info: %s \n", tile_group->GetInfo().c_str());
-    printf("debug tile group info: %s \n", debug_tile_group->GetInfo().c_str());
+
+    for (unsigned int i = 0; i < table->GetTileGroupCount(); i++) {
+      std::shared_ptr<storage::TileGroup> debug_tile_group = table->GetTileGroup(i);
+      printf("debug tile group info: %s \n", debug_tile_group->GetInfo().c_str());
+    }
+    std::shared_ptr<storage::TileGroup> debug_tile_group = table->GetTileGroupById(tuple_location.block);
+    printf("debug tile group by global id: %s\n", debug_tile_group->GetInfo().c_str());
 
 
 #ifdef LOG_TRACE_ENABLED
