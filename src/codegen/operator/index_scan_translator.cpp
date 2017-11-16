@@ -60,6 +60,7 @@ void IndexScanTranslator::Produce() const {
   llvm::Value *table_ptr = (llvm::Value *)table;
 //  llvm::Value *tile_group_ptr = codegen.Call(DataTableProxy::GetTileGroup, {table_ptr, 0});
 //  llvm::Value tile_id = (llvm::Value)13;
+//  llvm::Value *tile_group_id = (llvm::Value *)13u;
   llvm::Value *tile_group_ptr = codegen.Call(RuntimeFunctionsProxy::GetTileGroupByGlobalId, {table_ptr, codegen.Const32(13)});
   std::vector<llvm::Value *> debug_values;
   debug_values.push_back(tile_group_ptr);
