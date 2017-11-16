@@ -30,6 +30,7 @@
 #include "codegen/operator/projection_translator.h"
 #include "codegen/operator/table_scan_translator.h"
 #include "codegen/operator/update_translator.h"
+#include "codegen/operator/index_scan_translator.h"
 #include "codegen/expression/tuple_value_translator.h"
 #include "expression/case_expression.h"
 #include "expression/comparison_expression.h"
@@ -48,6 +49,7 @@
 #include "planner/projection_plan.h"
 #include "planner/seq_scan_plan.h"
 #include "planner/update_plan.h"
+#include "planner/index_scan_plan.h"
 
 namespace peloton {
 namespace codegen {
@@ -63,6 +65,11 @@ std::unique_ptr<OperatorTranslator> TranslatorFactory::CreateTranslator(
     case PlanNodeType::SEQSCAN: {
       auto &scan = static_cast<const planner::SeqScanPlan &>(plan_node);
       translator = new TableScanTranslator(scan, context, pipeline);
+      break;
+    }
+    case PlanNodeType::INDEXSCAN: {
+      auto &index_scan = static_cast<const planner::IndexScanPlan &>(plan_node);
+      translator = new IndexScanTranslator(index_scan, context, pipeline);
       break;
     }
     case PlanNodeType::PROJECTION: {
