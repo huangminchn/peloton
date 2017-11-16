@@ -433,6 +433,14 @@ bool IndexScanExecutor::ExecSecondaryIndexLookup() {
       tile_group = manager.GetTileGroup(tuple_location.block);
       tile_group_header = tile_group.get()->GetHeader();
     }
+
+    auto &plan = GetPlanNode<planner::IndexScanPlan>();
+    storage::DataTable *table = plan.GetTable();
+    std::shared_ptr<storage::TileGroup> debug_tile_group = table->GetTileGroup(tuple_location.block);
+    printf("tile group info: %s \n", tile_group->GetInfo().c_str());
+    printf("debug tile group info: %s \n", debug_tile_group->GetInfo().c_str());
+
+
 #ifdef LOG_TRACE_ENABLED
     else
       num_blocks_reused++;
