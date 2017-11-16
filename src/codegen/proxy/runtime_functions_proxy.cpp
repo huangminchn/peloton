@@ -23,6 +23,7 @@ DEFINE_TYPE(ColumnLayoutInfo, "peloton::ColumnLayoutInfo",
 
 DEFINE_METHOD(peloton::codegen, RuntimeFunctions, HashCrc64);
 DEFINE_METHOD(peloton::codegen, RuntimeFunctions, GetTileGroup);
+DEFINE_METHOD(peloton::codegen, RuntimeFunctions, GetTileGroupByGlobalId);
 DEFINE_METHOD(peloton::codegen, RuntimeFunctions, GetTileGroupLayout);
 DEFINE_METHOD(peloton::codegen, RuntimeFunctions, ThrowDivideByZeroException);
 DEFINE_METHOD(peloton::codegen, RuntimeFunctions, ThrowOverflowException);

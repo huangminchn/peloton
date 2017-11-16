@@ -67,6 +67,12 @@ storage::TileGroup *RuntimeFunctions::GetTileGroup(storage::DataTable *table,
   return tile_group.get();
 }
 
+storage::TileGroup *RuntimeFunctions::GetTileGroupByGlobalId(storage::DataTable *table,
+                                                             uint64_t tile_group_id) {
+  auto tile_group = table->GetTileGroupById(tile_group_id);
+  return tile_group.get();
+}
+
 //===----------------------------------------------------------------------===//
 // For every column in the tile group, fill out the layout information for the
 // column in the provided 'infos' array.  Specifically, we need a pointer to
