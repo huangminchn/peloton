@@ -23,6 +23,11 @@ class DataTable;
 class TileGroup;
 }  // namespace storage
 
+namespace index {
+class Index;
+struct ResultAndKey;
+}
+
 namespace codegen {
 
 //===----------------------------------------------------------------------===//
@@ -66,6 +71,14 @@ class RuntimeFunctions {
   static void ThrowDivideByZeroException();
 
   static void ThrowOverflowException();
+
+  static void ScanKey(index::Index *index, uint64_t query_key, index::ResultAndKey* result);
+
+  static index::ResultAndKey *GetOneResultAndKey();
+
+  static uint64_t GetTileGroupIdFromResult(index::ResultAndKey* result);
+
+  static int32_t GetTileGroupOffsetFromResult(index::ResultAndKey* result);
 };
 
 }  // namespace codegen
