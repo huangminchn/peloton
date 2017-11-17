@@ -22,6 +22,13 @@
 namespace peloton {
 namespace index {
 
+
+class CodeGenResult {
+public:
+  uint32_t block;
+  uint32_t offset;
+  ARTKey continue_key;
+};
 class ArtIndex : public Index {
   friend class IndexFactory;
 
