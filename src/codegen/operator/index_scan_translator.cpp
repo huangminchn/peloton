@@ -58,7 +58,7 @@ void IndexScanTranslator::Produce() const {
   printf("producing in index scan translator\n");
   auto &codegen = GetCodeGen();
 
-//  const index::ConjunctionScanPredicate* csp = &index_scan_.GetIndexPredicate().GetConjunctionList()[0];
+  const index::ConjunctionScanPredicate* csp = &index_scan_.GetIndexPredicate().GetConjunctionList()[0];
 //  index::ARTKey continue_key;
 //  llvm::Value *key_p = codegen.Const64((uint64_t)&continue_key);
 //  llvm::Value *csp_p = codegen.Const64((uint64_t)csp);
@@ -80,6 +80,19 @@ void IndexScanTranslator::Produce() const {
   debug_values.push_back(index_ptr);
   codegen.CallPrintf("index oid = %d index ptr = %d\n", debug_values);
   // debug
+
+  index::ResultAndKey result;
+  llvm::Value *result_p = codegen.Const64((uint64_t)&result);
+  if (csp->IsPointQuery()) {
+    const storage::Tuple *point_query_key_p = csp->GetPointQueryKey();
+    llvm::Value *query_key = codegen.Const64((uint64_t)point_query_key_p);
+    codegen.Call(RuntimeFunctionsProxy::ScanKey, {index_ptr, query_key, result_p});
+//    llvm::Value *item_p = new_result->GetElement
+  } else if (csp->IsFullIndexScan()) {
+
+  } else {
+
+  }
 
   /*
   llvm::Value *tile_group_idx = codegen.Const64(0);

@@ -23,6 +23,11 @@ class DataTable;
 class TileGroup;
 }  // namespace storage
 
+namespace index {
+class Index;
+struct ResultAndKey;
+}
+
 namespace codegen {
 
 //===----------------------------------------------------------------------===//
@@ -66,6 +71,8 @@ class RuntimeFunctions {
   static void ThrowDivideByZeroException();
 
   static void ThrowOverflowException();
+
+  static void ScanKey(index::Index *index, uint64_t query_key, uint64_t result);
 };
 
 }  // namespace codegen

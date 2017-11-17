@@ -19,6 +19,7 @@
 #include "storage/data_table.h"
 #include "storage/tile_group.h"
 #include "storage/tile.h"
+#include "codegen/proxy/result_and_key_proxy.h"
 
 namespace peloton {
 namespace codegen {
@@ -106,6 +107,10 @@ void RuntimeFunctions::ThrowDivideByZeroException() {
 
 void RuntimeFunctions::ThrowOverflowException() {
   throw std::overflow_error("ERROR: overflow");
+}
+
+void RuntimeFunctions::ScanKey(index::Index *index, uint64_t query_key, uint64_t result) {
+  return index->CodeGenScanKey(query_key, result);
 }
 
 }  // namespace codegen

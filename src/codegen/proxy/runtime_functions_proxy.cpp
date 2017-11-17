@@ -14,6 +14,8 @@
 
 #include "codegen/proxy/data_table_proxy.h"
 #include "codegen/proxy/tile_group_proxy.h"
+#include "codegen/proxy/index_proxy.h"
+#include "codegen/proxy/result_and_key_proxy.h"
 
 namespace peloton {
 namespace codegen {
@@ -27,6 +29,6 @@ DEFINE_METHOD(peloton::codegen, RuntimeFunctions, GetTileGroupByGlobalId);
 DEFINE_METHOD(peloton::codegen, RuntimeFunctions, GetTileGroupLayout);
 DEFINE_METHOD(peloton::codegen, RuntimeFunctions, ThrowDivideByZeroException);
 DEFINE_METHOD(peloton::codegen, RuntimeFunctions, ThrowOverflowException);
-
+DEFINE_METHOD(peloton::codegen, RuntimeFunctions, ScanKey);
 }  // namespace codegen
 }  // namespace peloton

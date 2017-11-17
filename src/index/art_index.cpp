@@ -138,6 +138,29 @@ void ArtIndex::ScanKey(const storage::Tuple *key,
   return;
 }
 
+void ArtIndex::CodeGenScanKey(uint64_t query_key, uint64_t result) {
+  printf("yooo!!! code gen scan key in art!!!!!!\n");
+  storage::Tuple *tuple_p = (storage::Tuple *)query_key;
+  ResultAndKey *result_p = (ResultAndKey *)result;
+  ARTKey index_key;
+  WriteIndexedAttributesInKey(tuple_p, index_key);
+  printf("index key size = %u\n", index_key.getKeyLen());
+  for (unsigned int i = 0; i < index_key.getKeyLen(); i++) {
+    printf("%d ", index_key.data[i]);
+  }
+  printf("\n");
+
+  std::vector<ItemPointer *> results;
+  auto &t = art_.GetThreadInfo();
+  art_.Lookup(index_key, t, results);
+  printf("results size = %lu\n", results.size());
+
+  result_p->continue_key = 0;
+  result_p->tuple_p = results[0];
+  printf("write success\n");
+  return;
+}
+
 /*
  * DeleteEntry() - Removes a key-value pair
  *
