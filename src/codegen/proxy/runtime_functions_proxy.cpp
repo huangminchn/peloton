@@ -30,5 +30,8 @@ DEFINE_METHOD(peloton::codegen, RuntimeFunctions, GetTileGroupLayout);
 DEFINE_METHOD(peloton::codegen, RuntimeFunctions, ThrowDivideByZeroException);
 DEFINE_METHOD(peloton::codegen, RuntimeFunctions, ThrowOverflowException);
 DEFINE_METHOD(peloton::codegen, RuntimeFunctions, ScanKey);
+DEFINE_METHOD(peloton::codegen, RuntimeFunctions, GetOneResultAndKey);
+DEFINE_METHOD(peloton::codegen, RuntimeFunctions, GetTileGroupIdFromResult);
+DEFINE_METHOD(peloton::codegen, RuntimeFunctions, GetTileGroupOffsetFromResult);
 }  // namespace codegen
 }  // namespace peloton

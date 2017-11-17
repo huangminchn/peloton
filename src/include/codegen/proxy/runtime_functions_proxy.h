@@ -34,6 +34,9 @@ PROXY(RuntimeFunctions) {
   DECLARE_METHOD(ThrowDivideByZeroException);
   DECLARE_METHOD(ThrowOverflowException);
   DECLARE_METHOD(ScanKey);
+  DECLARE_METHOD(GetOneResultAndKey);
+  DECLARE_METHOD(GetTileGroupIdFromResult);
+  DECLARE_METHOD(GetTileGroupOffsetFromResult);
 };
 
 TYPE_BUILDER(ColumnLayoutInfo, codegen::RuntimeFunctions::ColumnLayoutInfo);

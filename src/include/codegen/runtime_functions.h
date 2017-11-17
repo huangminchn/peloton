@@ -72,7 +72,13 @@ class RuntimeFunctions {
 
   static void ThrowOverflowException();
 
-  static void ScanKey(index::Index *index, uint64_t query_key, uint64_t result);
+  static void ScanKey(index::Index *index, uint64_t query_key, index::ResultAndKey* result);
+
+  static index::ResultAndKey *GetOneResultAndKey();
+
+  static int32_t GetTileGroupIdFromResult(index::ResultAndKey* result);
+
+  static int32_t GetTileGroupOffsetFromResult(index::ResultAndKey* result);
 };
 
 }  // namespace codegen

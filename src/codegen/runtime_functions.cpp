@@ -109,8 +109,21 @@ void RuntimeFunctions::ThrowOverflowException() {
   throw std::overflow_error("ERROR: overflow");
 }
 
-void RuntimeFunctions::ScanKey(index::Index *index, uint64_t query_key, uint64_t result) {
-  return index->CodeGenScanKey(query_key, result);
+void RuntimeFunctions::ScanKey(index::Index *index, uint64_t query_key, index::ResultAndKey* result) {
+  return index->CodeGenScanKey(query_key, (uint64_t)result);
+}
+
+index::ResultAndKey* RuntimeFunctions::GetOneResultAndKey() {
+  index::ResultAndKey *new_result = new index::ResultAndKey();
+  return new_result;
+}
+
+int32_t RuntimeFunctions::GetTileGroupIdFromResult(index::ResultAndKey* result) {
+  return result->tuple_p->block;
+}
+
+int32_t RuntimeFunctions::GetTileGroupOffsetFromResult(index::ResultAndKey* result) {
+  return result->tuple_p->offset;
 }
 
 }  // namespace codegen
