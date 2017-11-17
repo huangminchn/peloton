@@ -68,7 +68,7 @@ void IndexScanTranslator::Produce() const {
   llvm::Value *catalog_ptr = GetCatalogPtr();
   llvm::Value *db_oid = codegen.Const32(table.GetDatabaseOid());
   llvm::Value *table_oid = codegen.Const32(table.GetOid());
-//  llvm::Value *table_ptr = codegen.Call(StorageManagerProxy::GetTableWithOid, {catalog_ptr, db_oid, table_oid});
+  llvm::Value *table_ptr = codegen.Call(StorageManagerProxy::GetTableWithOid, {catalog_ptr, db_oid, table_oid});
   llvm::Value *index_oid = codegen.Const32(index_scan_.GetIndex()->GetOid());
 
   llvm::Value *index_ptr = codegen.Call(StorageManagerProxy::GetIndexWithOid,
@@ -102,57 +102,57 @@ void IndexScanTranslator::Produce() const {
     debug_values.push_back(tile_group_offset);
     codegen.CallPrintf("tile group id = %d, tile group offset = %d\n", debug_values);
 
-//    const uint32_t num_columns =
-//      static_cast<uint32_t>(table.GetSchema()->GetColumnCount());
-//    llvm::Value *column_layouts = codegen->CreateAlloca(
-//      ColumnLayoutInfoProxy::GetType(codegen), codegen.Const32(num_columns));
-//
-//
-//    llvm::Value *tile_group_ptr = codegen.Call(RuntimeFunctionsProxy::GetTileGroupByGlobalId,
-//                                               {table_ptr, tile_group_id});
-//
-//    // auto col_layouts = GetColumnLayouts(codegen, tile_group_ptr, column_layouts);
-//    uint32_t num_cols = table.GetSchema()->GetColumnCount();
-//    codegen.Call(
-//      RuntimeFunctionsProxy::GetTileGroupLayout,
-//      {tile_group_ptr, column_layouts, codegen.Const32(num_cols)});
-//
-//    // Collect <start, stride, is_columnar> triplets of all columns
-//    std::vector<TileGroup::ColumnLayout> col_layouts;
-//    auto *layout_type = ColumnLayoutInfoProxy::GetType(codegen);
-//    for (uint32_t col_id = 0; col_id < num_cols; col_id++) {
-//      auto *start = codegen->CreateLoad(codegen->CreateConstInBoundsGEP2_32(
-//        layout_type, column_layouts, col_id, 0));
-//      auto *stride = codegen->CreateLoad(codegen->CreateConstInBoundsGEP2_32(
-//        layout_type, column_layouts, col_id, 1));
-//      auto *columnar = codegen->CreateLoad(codegen->CreateConstInBoundsGEP2_32(
-//        layout_type, column_layouts, col_id, 2));
-//      col_layouts.push_back(TileGroup::ColumnLayout{col_id, start, stride, columnar});
-//    }
-//
-//    TileGroup tileGroup(*table.GetSchema());
-//    TileGroup::TileGroupAccess tile_group_access{tileGroup, col_layouts};
-//
-//    // generate the row batch
-//    RowBatch batch{this->GetCompilationContext(), tile_group_id, tile_group_offset,
-//                   tile_group_offset, sel_vec, true};
-//
-//
-//    std::vector<TableScanTranslator::AttributeAccess> attribute_accesses;
-//    std::vector<const planner::AttributeInfo *> ais;
-//    index_scan_.GetAttributes(ais);
-//    const auto &output_col_ids = index_scan_.GetColumnIds();
-//    for (oid_t col_idx = 0; col_idx < output_col_ids.size(); col_idx++) {
-//      attribute_accesses.emplace_back(tile_group_access, ais[output_col_ids[col_idx]]);
-//    }
-//    for (oid_t col_idx = 0; col_idx < output_col_ids.size(); col_idx++) {
-//      auto *attribute = ais[output_col_ids[col_idx]];
-//      batch.AddAttribute(attribute, &attribute_accesses[col_idx]);
-//    }
-//
-//    ConsumerContext context{this->GetCompilationContext(),
-//                            this->GetPipeline()};
-//    context.Consume(batch);
+    const uint32_t num_columns =
+      static_cast<uint32_t>(table.GetSchema()->GetColumnCount());
+    llvm::Value *column_layouts = codegen->CreateAlloca(
+      ColumnLayoutInfoProxy::GetType(codegen), codegen.Const32(num_columns));
+
+
+    llvm::Value *tile_group_ptr = codegen.Call(RuntimeFunctionsProxy::GetTileGroupByGlobalId,
+                                               {table_ptr, tile_group_id});
+
+    // auto col_layouts = GetColumnLayouts(codegen, tile_group_ptr, column_layouts);
+    uint32_t num_cols = table.GetSchema()->GetColumnCount();
+    codegen.Call(
+      RuntimeFunctionsProxy::GetTileGroupLayout,
+      {tile_group_ptr, column_layouts, codegen.Const32(num_cols)});
+
+    // Collect <start, stride, is_columnar> triplets of all columns
+    std::vector<TileGroup::ColumnLayout> col_layouts;
+    auto *layout_type = ColumnLayoutInfoProxy::GetType(codegen);
+    for (uint32_t col_id = 0; col_id < num_cols; col_id++) {
+      auto *start = codegen->CreateLoad(codegen->CreateConstInBoundsGEP2_32(
+        layout_type, column_layouts, col_id, 0));
+      auto *stride = codegen->CreateLoad(codegen->CreateConstInBoundsGEP2_32(
+        layout_type, column_layouts, col_id, 1));
+      auto *columnar = codegen->CreateLoad(codegen->CreateConstInBoundsGEP2_32(
+        layout_type, column_layouts, col_id, 2));
+      col_layouts.push_back(TileGroup::ColumnLayout{col_id, start, stride, columnar});
+    }
+
+    TileGroup tileGroup(*table.GetSchema());
+    TileGroup::TileGroupAccess tile_group_access{tileGroup, col_layouts};
+
+    // generate the row batch
+    RowBatch batch{this->GetCompilationContext(), tile_group_id, tile_group_offset,
+                   tile_group_offset, sel_vec, true};
+
+
+    std::vector<TableScanTranslator::AttributeAccess> attribute_accesses;
+    std::vector<const planner::AttributeInfo *> ais;
+    index_scan_.GetAttributes(ais);
+    const auto &output_col_ids = index_scan_.GetColumnIds();
+    for (oid_t col_idx = 0; col_idx < output_col_ids.size(); col_idx++) {
+      attribute_accesses.emplace_back(tile_group_access, ais[output_col_ids[col_idx]]);
+    }
+    for (oid_t col_idx = 0; col_idx < output_col_ids.size(); col_idx++) {
+      auto *attribute = ais[output_col_ids[col_idx]];
+      batch.AddAttribute(attribute, &attribute_accesses[col_idx]);
+    }
+
+    ConsumerContext context{this->GetCompilationContext(),
+                            this->GetPipeline()};
+    context.Consume(batch);
   } else if (csp->IsFullIndexScan()) {
 
   } else {
