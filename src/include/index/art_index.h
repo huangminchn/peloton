@@ -29,6 +29,10 @@ public:
   uint32_t offset;
   ARTKey continue_key;
 };
+struct ResultAndKey {
+  ItemPointer *tuple_p;
+  ARTKey continue_key;
+};
 class ArtIndex : public Index {
   friend class IndexFactory;
 
@@ -76,6 +80,8 @@ class ArtIndex : public Index {
   void ScanAllKeys(std::vector<ItemPointer *> &result);
 
   void ScanKey(const storage::Tuple *key, std::vector<ItemPointer *> &result);
+
+  void CodeGenScan(uint64_t csp, uint64_t continue_key, uint64_t &tile_id, uint64_t &tile_offset);
 
   // TODO: Implement this
   size_t GetMemoryFootprint() { return 0; }

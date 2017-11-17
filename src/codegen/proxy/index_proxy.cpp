@@ -15,8 +15,8 @@
 namespace peloton {
 namespace codegen {
 
-DEFINE_TYPE(ArtIndex, "index::ArtIndex", MEMBER(opaque));
-DEFINE_METHOD(peloton::index, ArtIndex, CodeGenScan);
+DEFINE_TYPE(Index, "index::Index", MEMBER(opaque));
+//DEFINE_METHOD(peloton::index, Index, CodeGenScan);
 
 }  // namespace codegen
 }  // namespace peloton

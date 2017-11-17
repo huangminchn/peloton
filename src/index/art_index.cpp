@@ -258,6 +258,11 @@ void ArtIndex::ScanAllKeys(std::vector<ItemPointer *> &result) {
   return;
 }
 
+void ArtIndex::CodeGenScan(UNUSED_ATTRIBUTE uint64_t csp, UNUSED_ATTRIBUTE uint64_t continue_key, UNUSED_ATTRIBUTE uint64_t &tile_id, UNUSED_ATTRIBUTE uint64_t &tile_offset) {
+  tile_id = 0;
+  tile_offset = 0;
+}
+
 std::string ArtIndex::GetTypeName() const { return "ART"; }
 
 /*

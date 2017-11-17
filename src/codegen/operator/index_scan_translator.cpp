@@ -58,21 +58,30 @@ void IndexScanTranslator::Produce() const {
   printf("producing in index scan translator\n");
   auto &codegen = GetCodeGen();
 
-  const index::ConjunctionScanPredicate* csp = &index_scan_.GetIndexPredicate().GetConjunctionList()[0];
-  index::ARTKey continue_key;
-  llvm::Value *key_p = codegen.Const64((uint64_t)&continue_key);
-  llvm::Value *csp_p = codegen.Const64((uint64_t)csp);
+//  const index::ConjunctionScanPredicate* csp = &index_scan_.GetIndexPredicate().GetConjunctionList()[0];
+//  index::ARTKey continue_key;
+//  llvm::Value *key_p = codegen.Const64((uint64_t)&continue_key);
+//  llvm::Value *csp_p = codegen.Const64((uint64_t)csp);
 
   storage::DataTable &table = *index_scan_.GetTable();
   llvm::Value *catalog_ptr = GetCatalogPtr();
   llvm::Value *db_oid = codegen.Const32(table.GetDatabaseOid());
   llvm::Value *table_oid = codegen.Const32(table.GetOid());
-  llvm::Value *table_ptr = codegen.Call(StorageManagerProxy::GetTableWithOid,
-                                        {catalog_ptr, db_oid, table_oid});
+//  llvm::Value *table_ptr = codegen.Call(StorageManagerProxy::GetTableWithOid, {catalog_ptr, db_oid, table_oid});
   llvm::Value *index_oid = codegen.Const32(index_scan_.GetIndex()->GetOid());
+
   llvm::Value *index_ptr = codegen.Call(StorageManagerProxy::GetIndexWithOid,
                                          {catalog_ptr, db_oid, table_oid, index_oid});
 
+
+  // debug
+  std::vector<llvm::Value *> debug_values;
+  debug_values.push_back(index_oid);
+  debug_values.push_back(index_ptr);
+  codegen.CallPrintf("index oid = %d index ptr = %d\n", debug_values);
+  // debug
+
+  /*
   llvm::Value *tile_group_idx = codegen.Const64(0);
   llvm::Value *tile_group_offset = codegen.Const64(0);
 
@@ -91,7 +100,7 @@ void IndexScanTranslator::Produce() const {
     lang::If tile_group_id_not0{codegen, not0};
     {
       // use tile group id and offset to get the tuple!
-      llvm::Value *tile_group_ptr = codegen.Call(RuntimeFunctionsProxy::GetTileGroupByGlobalId, {table_ptr, tile_group_idx});
+//      llvm::Value *tile_group_ptr = codegen.Call(RuntimeFunctionsProxy::GetTileGroupByGlobalId, {table_ptr, tile_group_idx});
 
       RowBatch batch{this->GetCompilationContext(), tile_group_idx, tile_group_offset,
                      tile_group_offset, sel_vec, true};
@@ -102,6 +111,7 @@ void IndexScanTranslator::Produce() const {
     }
     tile_group_id_not0.EndIf();
   }
+   */
 
 }
 
