@@ -126,5 +126,13 @@ int32_t RuntimeFunctions::GetTileGroupOffsetFromResult(index::ResultAndKey* resu
   return result->tuple_p->offset;
 }
 
+bool RuntimeFunctions::IsValidTileGroup(index::ResultAndKey* result) {
+  if (result->tuple_p == (0lu)) {
+    return false;
+  } else {
+    return true;
+  }
+}
+
 }  // namespace codegen
 }  // namespace peloton

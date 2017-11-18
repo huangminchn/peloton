@@ -10,7 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <include/planner/index_scan_plan.h>
+#include "planner/index_scan_plan.h"
 #include "codegen/query_compiler.h"
 
 #include "codegen/compilation_context.h"
