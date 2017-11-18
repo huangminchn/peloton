@@ -118,8 +118,8 @@ index::ResultAndKey* RuntimeFunctions::GetOneResultAndKey() {
   return new_result;
 }
 
-int32_t RuntimeFunctions::GetTileGroupIdFromResult(index::ResultAndKey* result) {
-  return result->tuple_p->block;
+uint64_t RuntimeFunctions::GetTileGroupIdFromResult(index::ResultAndKey* result) {
+  return (uint64_t)(result->tuple_p->block);
 }
 
 int32_t RuntimeFunctions::GetTileGroupOffsetFromResult(index::ResultAndKey* result) {

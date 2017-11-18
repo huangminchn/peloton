@@ -76,7 +76,7 @@ class RuntimeFunctions {
 
   static index::ResultAndKey *GetOneResultAndKey();
 
-  static int32_t GetTileGroupIdFromResult(index::ResultAndKey* result);
+  static uint64_t GetTileGroupIdFromResult(index::ResultAndKey* result);
 
   static int32_t GetTileGroupOffsetFromResult(index::ResultAndKey* result);
 };

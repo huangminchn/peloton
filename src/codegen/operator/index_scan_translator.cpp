@@ -95,27 +95,29 @@ void IndexScanTranslator::Produce() const {
     llvm::Value *query_key = codegen.Const64((uint64_t)point_query_key_p);
     printf("before making function call to scankey\n");
     codegen.Call(RuntimeFunctionsProxy::ScanKey, {index_ptr, query_key, result_p});
+    printf("good after making function call to ScanKey\n");
     llvm::Value *tile_group_id = codegen.Call(RuntimeFunctionsProxy::GetTileGroupIdFromResult, {result_p});
     llvm::Value *tile_group_offset = codegen.Call(RuntimeFunctionsProxy::GetTileGroupOffsetFromResult, {result_p});
     debug_values.clear();
     debug_values.push_back(tile_group_id);
     debug_values.push_back(tile_group_offset);
     codegen.CallPrintf("tile group id = %d, tile group offset = %d\n", debug_values);
-
+    printf("good after getting tile group id and offset\n");
     const uint32_t num_columns =
       static_cast<uint32_t>(table.GetSchema()->GetColumnCount());
     llvm::Value *column_layouts = codegen->CreateAlloca(
       ColumnLayoutInfoProxy::GetType(codegen), codegen.Const32(num_columns));
-
+    printf("good after getting column_layoutst\n");
 
     llvm::Value *tile_group_ptr = codegen.Call(RuntimeFunctionsProxy::GetTileGroupByGlobalId,
                                                {table_ptr, tile_group_id});
-
+    printf("good after getting tile_group_ptr\n");
     // auto col_layouts = GetColumnLayouts(codegen, tile_group_ptr, column_layouts);
     uint32_t num_cols = table.GetSchema()->GetColumnCount();
     codegen.Call(
       RuntimeFunctionsProxy::GetTileGroupLayout,
       {tile_group_ptr, column_layouts, codegen.Const32(num_cols)});
+    printf("good after getting GetTileGroupLayout\n");
 
     // Collect <start, stride, is_columnar> triplets of all columns
     std::vector<TileGroup::ColumnLayout> col_layouts;
@@ -129,14 +131,25 @@ void IndexScanTranslator::Produce() const {
         layout_type, column_layouts, col_id, 2));
       col_layouts.push_back(TileGroup::ColumnLayout{col_id, start, stride, columnar});
     }
-
+    printf("good after getting std::vector<TileGroup::ColumnLayout>\n");
     TileGroup tileGroup(*table.GetSchema());
     TileGroup::TileGroupAccess tile_group_access{tileGroup, col_layouts};
+    printf("good after getting tile group access\n");
+
+    // visibility
+    llvm::Value *txn = this->GetCompilationContext().GetTransactionPtr();
+    llvm::Value *raw_sel_vec = sel_vec.GetVectorPtr();
+
+    // Invoke TransactionRuntime::PerformRead(...)
+    llvm::Value *out_idx =
+      codegen.Call(TransactionRuntimeProxy::PerformVectorizedRead,
+                   {txn, tile_group_ptr, tile_group_offset, codegen->CreateAdd(tile_group_offset, codegen.Const32(1)), raw_sel_vec});
+    sel_vec.SetNumElements(out_idx);
 
     // generate the row batch
-    RowBatch batch{this->GetCompilationContext(), tile_group_id, tile_group_offset,
-                   tile_group_offset, sel_vec, true};
-
+    RowBatch batch{this->GetCompilationContext(), tile_group_id, codegen.Const32(0),
+                   codegen.Const32(1), sel_vec, true};
+    printf("good after generating row batch\n");
 
     std::vector<TableScanTranslator::AttributeAccess> attribute_accesses;
     std::vector<const planner::AttributeInfo *> ais;
@@ -145,6 +158,7 @@ void IndexScanTranslator::Produce() const {
     for (oid_t col_idx = 0; col_idx < output_col_ids.size(); col_idx++) {
       attribute_accesses.emplace_back(tile_group_access, ais[output_col_ids[col_idx]]);
     }
+    printf("output_col_ids.size() = %lu\n", output_col_ids.size());
     for (oid_t col_idx = 0; col_idx < output_col_ids.size(); col_idx++) {
       auto *attribute = ais[output_col_ids[col_idx]];
       batch.AddAttribute(attribute, &attribute_accesses[col_idx]);
@@ -152,6 +166,7 @@ void IndexScanTranslator::Produce() const {
 
     ConsumerContext context{this->GetCompilationContext(),
                             this->GetPipeline()};
+    printf("before consuming batch\n");
     context.Consume(batch);
   } else if (csp->IsFullIndexScan()) {
 
