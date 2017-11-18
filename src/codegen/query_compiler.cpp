@@ -30,15 +30,12 @@ std::unique_ptr<Query> QueryCompiler::Compile(
     const planner::AbstractPlan &root, QueryResultConsumer &result_consumer,
     CompileStats *stats) {
   // The query statement we compile
-  printf("before constructing query\n");
   std::unique_ptr<Query> query{new Query(root)};
 
   // Set up the compilation context
-  printf("before building context\n");
   CompilationContext context{*query, result_consumer};
 
   // Perform the compilation
-  printf("before generating plan(stats)\n");
   context.GeneratePlan(stats);
 
   // Return the compiled query statement
