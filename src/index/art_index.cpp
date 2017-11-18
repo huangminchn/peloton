@@ -156,7 +156,11 @@ void ArtIndex::CodeGenScanKey(uint64_t query_key, uint64_t result) {
   printf("results size = %lu\n", results.size());
 
 //  result_p->continue_key = 0;
-  result_p->tuple_p = results[0];
+  if (results.size() > 0) {
+    result_p->tuple_p = results[0];
+  } else {
+    result_p->tuple_p = 0;
+  }
   printf("write success\n");
   return;
 }
