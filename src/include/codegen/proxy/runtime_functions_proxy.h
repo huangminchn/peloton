@@ -37,6 +37,7 @@ PROXY(RuntimeFunctions) {
   DECLARE_METHOD(GetOneResultAndKey);
   DECLARE_METHOD(GetTileGroupIdFromResult);
   DECLARE_METHOD(GetTileGroupOffsetFromResult);
+  DECLARE_METHOD(IsValidTileGroup);
 };
 
 TYPE_BUILDER(ColumnLayoutInfo, codegen::RuntimeFunctions::ColumnLayoutInfo);

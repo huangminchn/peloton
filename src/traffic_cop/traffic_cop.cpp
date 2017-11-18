@@ -150,7 +150,7 @@ ResultType TrafficCop::ExecuteStatement(
             statement->GetStatementName().c_str());
   LOG_TRACE("Execute Statement of query: %s",
             statement->GetQueryString().c_str());
-  LOG_INFO("Execute Statement Plan:\n%s",
+  LOG_TRACE("Execute Statement Plan:\n%s",
             planner::PlanUtil::GetInfo(statement->GetPlanTree().get()).c_str());
   LOG_TRACE("Execute Statement Query Type: %s", statement->GetQueryTypeString().c_str());
   LOG_TRACE("----QueryType: %d--------", (int)statement->GetQueryType());
