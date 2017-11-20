@@ -161,10 +161,10 @@ TEST_F(RandomSelectTests, RandomSelectRecord) {
   printf("good 2\n");
 
 
-  for (int i = 0; i < 1000000; i++) {
+  for (int i = 0; i < 10000000; i++) {
     std::vector<int> vals;
-//    vals.push_back(std::rand() % 1000000);
-    vals.push_back(i);
+    vals.push_back(std::rand() % 2000000000);
+//    vals.push_back(i);
     vals.push_back(std::rand() % 1000000);
     vals.push_back(std::rand() % 1000000);
 
@@ -177,12 +177,12 @@ TEST_F(RandomSelectTests, RandomSelectRecord) {
   // random select
   Timer<> timer;
   timer.Start();
-  for (int i = 0; i < 1000; i++) {
-//    query = "select * from " + outer_table_name + " where c0 = " + std::to_string(std::rand() % 1000000);
-    std::string query = "select * from " + outer_table_name + " where c0 = 666";
+  for (int i = 0; i < 10000000; i++) {
+    std::string  query = "select * from " + outer_table_name + " where c0 = " + std::to_string(std::rand() % 2000000000);
+//    std::string query = "select * from " + outer_table_name + " where c0 = 666";
 //    printf("good 11\n");
-    std::unique_ptr<optimizer::AbstractOptimizer> optimizer(
-      new optimizer::Optimizer());
+//    std::unique_ptr<optimizer::AbstractOptimizer> optimizer(
+//      new optimizer::Optimizer());
     auto plan =
       TestingSQLUtil::GeneratePlanWithOptimizer(optimizer, query, txn);
 //
@@ -194,8 +194,8 @@ TEST_F(RandomSelectTests, RandomSelectRecord) {
     std::vector<StatementResult> result;
     std::vector<int> result_format;
     result_format.push_back(0);
-    result_format.push_back(1);
-    result_format.push_back(2);
+//    result_format.push_back(1);
+//    result_format.push_back(2);
     executor::ExecuteResult p_status;
     executor::PlanExecutor::ExecutePlan(plan, txn, params, result, result_format, p_status);
   }
