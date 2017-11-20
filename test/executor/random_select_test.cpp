@@ -143,12 +143,15 @@ TEST_F(RandomSelectTests, RandomSelectRecord) {
   EXPECT_TRUE(executor.Init());
   EXPECT_TRUE(executor.Execute());
   EXPECT_EQ(1, table->GetTupleCount());
+  txn_manager.CommitTransaction(txn);
 
   // insert 10M tuple
   Timer<> timer;
   timer.Start();
   std::srand(std::time(nullptr));
   for (int i = 0; i < 1000000; i++) {
+    txn = txn_manager.BeginTransaction();
+    printf("insert tuple %d\n", i);
     values_ptr.at(0).reset(new expression::ConstantValueExpression(
       type::ValueFactory::GetIntegerValue(std::rand() % 1000000)));
     values_ptr.at(1).reset(new expression::ConstantValueExpression(
@@ -159,10 +162,11 @@ TEST_F(RandomSelectTests, RandomSelectRecord) {
     executor::InsertExecutor executor2(&node2, context.get());
     executor2.Init();
     executor2.Execute();
+    txn_manager.CommitTransaction(txn);
   }
   timer.Stop();
   LOG_INFO("insert 10M tuples takes %.8lfs", timer.GetDuration());
-  txn_manager.CommitTransaction(txn);
+
 
 
   txn = txn_manager.BeginTransaction();
@@ -171,6 +175,7 @@ TEST_F(RandomSelectTests, RandomSelectRecord) {
   timer.Start();
 
   for (int scale = 0; scale < 1000000; scale++) {
+    printf("read tuple %d\n", scale);
     auto index = table->GetIndex(0);
 
     std::vector<oid_t> column_ids({0, 1});
