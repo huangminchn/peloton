@@ -57,8 +57,8 @@ void PlanExecutor::ExecutePlan(
   if (!settings::SettingsManager::GetBool(settings::SettingId::codegen)
       || !codegen::QueryCompiler::IsSupported(*plan)) {
     bool status;
-    Timer<> timer;
-    timer.Start();
+//    Timer<> timer;
+//    timer.Start();
     std::unique_ptr<executor::AbstractExecutor> executor_tree(
         BuildExecutorTree(nullptr, plan.get(), executor_context.get()));
 
@@ -97,8 +97,8 @@ void PlanExecutor::ExecutePlan(
     p_status.m_result = ResultType::SUCCESS;
     p_status.m_result_slots = nullptr;
     CleanExecutorTree(executor_tree.get());
-    timer.Stop();
-    LOG_INFO("[INTERPRETER] query execution takes %.5lfs", timer.GetDuration());
+//    timer.Stop();
+//    LOG_INFO("[INTERPRETER] query execution takes %.5lfs", timer.GetDuration());
     return;
   }
 

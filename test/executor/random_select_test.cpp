@@ -52,6 +52,7 @@
 #include "sql/testing_sql_util.h"
 #include "common/timer.h"
 #include "executor/plan_executor.h"
+#include "executor/index_scan_executor.h"
 
 namespace peloton {
 namespace test {
@@ -63,20 +64,23 @@ class RandomSelectTests : public PelotonTest {};
 //                int insert_workers,
 //                UNUSED_ATTRIBUTE uint64_t
 //                thread_itr) {
-//  for (size_t scale_itr = 0; scale_itr < scale_factor; scale_itr++) {
-//    int begin_index = std::rand() % (total_rows - 1);
-//    int end_index = std::rand() % (total_rows - begin_index) + begin_index + 1;
-//    if (end_index >= total_rows) {
-//      end_index = total_rows - 1;
-//    }
-//    index::ARTKey continue_key;
-//    std::vector<ItemPointer *> result;
-//    size_t result_found = 0;
-//    auto &t = index->art_.GetThreadInfo();
-//    index->art_.LookupRange(key_to_values[begin_index].key,
-//                            key_to_values[end_index].key, continue_key, result,
-//                            0, result_found, t);
-//    EXPECT_EQ(insert_workers * (end_index - begin_index + 1), result_found);
+//
+//  for (int i = 0; i < 1000000; i++) {
+//    std::string query = "select * from outer_r where c0 = " + std::to_string(std::rand() % 1000000);
+//    std::unique_ptr<optimizer::AbstractOptimizer> optimizer(
+//      new optimizer::Optimizer());
+//    auto plan =
+//      TestingSQLUtil::GeneratePlanWithOptimizer(optimizer, query, txn);
+//
+//
+//    const std::vector<type::Value> params;
+//    std::vector<StatementResult> result;
+//    std::vector<int> result_format;
+//    result_format.push_back(0);
+//    result_format.push_back(1);
+//    result_format.push_back(2);
+//    executor::ExecuteResult p_status;
+//    executor::PlanExecutor::ExecutePlan(plan, txn, params, result, result_format, p_status);
 //  }
 //}
 
@@ -140,20 +144,6 @@ TEST_F(RandomSelectTests, RandomSelectRecord) {
     catalog->GetTableWithName(DEFAULT_DB_NAME, outer_table_name, txn);
 
 
-//  auto tuple_schema = outer_table->GetSchema();
-//  std::vector<oid_t> key_attrs;
-//  catalog::Schema *key_schema;
-//  index::IndexMetadata *index_metadata;
-//  key_attrs = {0};
-//  key_schema = catalog::Schema::CopySchema(tuple_schema, key_attrs);
-//  key_schema->SetIndexedColumns(key_attrs);
-//  index_metadata = new index::IndexMetadata(
-//    "secondary_art_index", 123, INVALID_OID, INVALID_OID, IndexType::BWTREE,
-//    IndexConstraintType::PRIMARY_KEY, tuple_schema, key_schema, key_attrs,
-//    false);
-//  std::shared_ptr<index::Index> pkey_index(
-//    index::IndexFactory::GetIndex(index_metadata));
-//  outer_table->AddIndex(pkey_index);
 
   std::string query = "create index art on " + outer_table_name + "(c0)";
   std::unique_ptr<optimizer::AbstractOptimizer> optimizer(
@@ -173,7 +163,8 @@ TEST_F(RandomSelectTests, RandomSelectRecord) {
 
   for (int i = 0; i < 1000000; i++) {
     std::vector<int> vals;
-    vals.push_back(std::rand() % 1000000);
+//    vals.push_back(std::rand() % 1000000);
+    vals.push_back(i);
     vals.push_back(std::rand() % 1000000);
     vals.push_back(std::rand() % 1000000);
 
@@ -187,17 +178,26 @@ TEST_F(RandomSelectTests, RandomSelectRecord) {
   Timer<> timer;
   timer.Start();
   for (int i = 0; i < 1000; i++) {
-    query = "select * from " + outer_table_name + " where c0 = " + std::to_string(std::rand() % 1000000);
-    printf("good 11\n");
-    plan =
+//    query = "select * from " + outer_table_name + " where c0 = " + std::to_string(std::rand() % 1000000);
+    std::string query = "select * from " + outer_table_name + " where c0 = 666";
+//    printf("good 11\n");
+    std::unique_ptr<optimizer::AbstractOptimizer> optimizer(
+      new optimizer::Optimizer());
+    auto plan =
       TestingSQLUtil::GeneratePlanWithOptimizer(optimizer, query, txn);
-    printf("good 12\n");
+//
+//    executor::IndexScanExecutor indexScanExecutor(plan.get(), context.get());
+//    indexScanExecutor.Init();
+//    indexScanExecutor.Execute();
+
     const std::vector<type::Value> params;
     std::vector<StatementResult> result;
-    const std::vector<int> result_format;
+    std::vector<int> result_format;
+    result_format.push_back(0);
+    result_format.push_back(1);
+    result_format.push_back(2);
     executor::ExecuteResult p_status;
     executor::PlanExecutor::ExecutePlan(plan, txn, params, result, result_format, p_status);
-    printf("good 13\n");
   }
   timer.Stop();
   printf("read 10M tuples takes %.8lfs", timer.GetDuration());
