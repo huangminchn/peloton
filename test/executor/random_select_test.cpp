@@ -168,17 +168,16 @@ TEST_F(RandomSelectTests, RandomSelectRecord) {
   LOG_INFO("insert 10M tuples takes %.8lfs", timer.GetDuration());
 
 
-
-  txn = txn_manager.BeginTransaction();
   // randome read
   timer.Reset();
   timer.Start();
 
+  auto index = table->GetIndex(0);
+  std::vector<oid_t> column_ids({0, 1});
   for (int scale = 0; scale < 1000000; scale++) {
+    txn = txn_manager.BeginTransaction();
     printf("read tuple %d\n", scale);
-    auto index = table->GetIndex(0);
 
-    std::vector<oid_t> column_ids({0, 1});
     std::vector<oid_t> key_column_ids;
     std::vector<ExpressionType> expr_types;
     std::vector<type::Value> values;
@@ -203,12 +202,13 @@ TEST_F(RandomSelectTests, RandomSelectRecord) {
     executor::IndexScanExecutor read_executor(&read_node, context.get());
 
     read_executor.Execute();
+    txn_manager.CommitTransaction(txn);
   }
 
 
   timer.Stop();
   LOG_INFO("read 10M tuples takes %.8lfs", timer.GetDuration());
-  txn_manager.CommitTransaction(txn);
+
 
   // free the database just created
   txn = txn_manager.BeginTransaction();
