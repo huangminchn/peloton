@@ -32,6 +32,7 @@
 #include <cstdlib>
 #include <unordered_set>
 #include <vector>
+#include <set>
 
 #include "codegen/bloom_filter_accessor.h"
 #include "codegen/codegen.h"
@@ -53,36 +54,42 @@
 #include "common/timer.h"
 #include "executor/plan_executor.h"
 #include "executor/index_scan_executor.h"
+#include "concurrency/transaction.h"
 
 namespace peloton {
 namespace test {
 
 class RandomSelectTests : public PelotonTest {};
 
-//void ReadHelper(index::ArtIndex *index,
-//                size_t scale_factor, int total_rows,
-//                int insert_workers,
-//                UNUSED_ATTRIBUTE uint64_t
-//                thread_itr) {
-//
-//  for (int i = 0; i < 1000000; i++) {
-//    std::string query = "select * from outer_r where c0 = " + std::to_string(std::rand() % 1000000);
-//    std::unique_ptr<optimizer::AbstractOptimizer> optimizer(
-//      new optimizer::Optimizer());
-//    auto plan =
-//      TestingSQLUtil::GeneratePlanWithOptimizer(optimizer, query, txn);
-//
-//
-//    const std::vector<type::Value> params;
-//    std::vector<StatementResult> result;
-//    std::vector<int> result_format;
-//    result_format.push_back(0);
-//    result_format.push_back(1);
-//    result_format.push_back(2);
-//    executor::ExecuteResult p_status;
-//    executor::PlanExecutor::ExecutePlan(plan, txn, params, result, result_format, p_status);
-//  }
-//}
+void ReadHelper(optimizer::AbstractOptimizer *optimizer,
+                UNUSED_ATTRIBUTE size_t scale_factor, UNUSED_ATTRIBUTE int total_rows,
+                UNUSED_ATTRIBUTE uint64_t thread_itr) {
+  printf("yooooo\n");
+  auto &txn_manager = concurrency::TransactionManagerFactory::GetInstance();
+  auto txn = txn_manager.BeginTransaction();
+
+//  std::unique_ptr<optimizer::AbstractOptimizer> optimizer(opt);
+  std::unique_ptr<optimizer::AbstractOptimizer> optimizer2 = std::unique_ptr<optimizer::AbstractOptimizer>(optimizer);
+  for (int i = 0; i < 1000; i++) {
+    printf("i = %d\n", i);
+    std::string  query = "select * from outer_r where c0 = " + std::to_string(std::rand() % 2000000000);
+//    std::string query = "select * from " + outer_table_name + " where c0 = 666";
+    auto plan =
+      TestingSQLUtil::GeneratePlanWithOptimizer(optimizer2, query, txn);
+    PL_ASSERT(plan->GetPlanNodeType() == PlanNodeType::INDEXSCAN);
+
+    const std::vector<type::Value> params;
+    std::vector<StatementResult> result;
+    std::vector<int> result_format;
+    result_format.push_back(0);
+    result_format.push_back(1);
+    result_format.push_back(2);
+    executor::ExecuteResult p_status;
+    executor::PlanExecutor::ExecutePlan(plan, txn, params, result, result_format, p_status);
+  }
+
+  txn_manager.CommitTransaction(txn);
+}
 
 void InsertTuple(const std::vector<int> &vals, storage::DataTable *table,
                  concurrency::Transaction *txn) {
@@ -160,11 +167,21 @@ TEST_F(RandomSelectTests, RandomSelectRecord) {
   executor::PlanExecutor::ExecutePlan(plan, txn, params, result, result_format, p_status);
   printf("good 2\n");
 
+  int key_num = 1000;
+  std::set<int> key_set;
+  std::array<int, 1000> key_array;
+  std::set<int>::iterator it;
 
-  for (int i = 0; i < 10000000; i++) {
+  for (int i = 0; i < key_num; i++) {
     std::vector<int> vals;
-    vals.push_back(std::rand() % 2000000000);
-//    vals.push_back(i);
+    int key = std::rand() % 2000000000;
+    it = key_set.find(key);
+    while (it != key_set.end()) {
+      key = std::rand() % 2000000000;
+    }
+    key_set.insert(key);
+    key_array[i] = key;
+    vals.push_back(key);
     vals.push_back(std::rand() % 1000000);
     vals.push_back(std::rand() % 1000000);
 
@@ -177,24 +194,16 @@ TEST_F(RandomSelectTests, RandomSelectRecord) {
   // random select
   Timer<> timer;
   timer.Start();
-  for (int i = 0; i < 10000000; i++) {
-    std::string  query = "select * from " + outer_table_name + " where c0 = " + std::to_string(std::rand() % 2000000000);
-//    std::string query = "select * from " + outer_table_name + " where c0 = 666";
-//    printf("good 11\n");
-//    std::unique_ptr<optimizer::AbstractOptimizer> optimizer(
-//      new optimizer::Optimizer());
+
+//  // multi thread reads
+//  LaunchParallelTest(5, ReadHelper, optimizer.get(), 100, 1000);
+
+  int read_num = 10000;
+  for (int i = 0; i < read_num; i++) {
+    int key_index = std::rand() % key_num;
+    std::string  query = "select * from " + outer_table_name + " where c0 = " + std::to_string(key_array[key_index]);
     auto plan =
       TestingSQLUtil::GeneratePlanWithOptimizer(optimizer, query, txn);
-//    PL_ASSERT(plan->GetPlanNodeType() != ty);
-//    PL_ASSERT(plan->GetPlanNodeType() == PlanNodeType::INDEXSCAN);
-//    if (plan->GetPlanNodeType() == PlanNodeType::INDEXSCAN) {
-//      printf("it is index scan plan!!\n");
-//    }
-
-//
-//    executor::IndexScanExecutor indexScanExecutor(plan.get(), context.get());
-//    indexScanExecutor.Init();
-//    indexScanExecutor.Execute();
 
     const std::vector<type::Value> params;
     std::vector<StatementResult> result;
@@ -206,7 +215,7 @@ TEST_F(RandomSelectTests, RandomSelectRecord) {
     executor::PlanExecutor::ExecutePlan(plan, txn, params, result, result_format, p_status);
   }
   timer.Stop();
-  printf("read 10M tuples takes %.8lfs", timer.GetDuration());
+  printf("read 10M tuples takes %.8lfs\n", timer.GetDuration());
 
   // end of random select
 
