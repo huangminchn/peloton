@@ -396,13 +396,10 @@ void Tree::fullScan(std::vector<ItemPointer *> &result, std::size_t &resultCount
 
 TID Tree::checkKey(const TID tid, const Key &k) const {
   Key kt;
-  printf("in checkKey()\n");
   this->loadKey(tid, kt, metadata);
   if (k == kt) {
-    printf("recovered key is the same as the inserted key\n");
     return tid;
   }
-  printf("recovered key is not the same as the inserted key!\n");
   return 0;
 }
 
