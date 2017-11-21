@@ -231,6 +231,13 @@ void TestingIndexUtil::MultiThreadedInsertTest(const IndexType index_type) {
 
   index->ScanAllKeys(location_ptrs);
   printf("tuple size = %lu\n", location_ptrs.size());
+
+  timer.Reset();
+  timer.Start();
+  LaunchParallelTest(num_threads, TestingIndexUtil::ReadHelper, index.get(),
+                     pool, 200);
+  timer.Stop();
+  printf("read elapsed time = %.5lf\n", timer.GetDuration());
 //  EXPECT_EQ(location_ptrs.size(), 7);
 //  location_ptrs.clear();
 //
@@ -784,6 +791,69 @@ void TestingIndexUtil::InsertHelper(index::Index *index, type::AbstractPool *poo
     // index->InsertEntry(key2.get(), item1.get());
     // index->InsertEntry(key3.get(), item1.get());
     index->InsertEntry(key4.get(), item1.get());
+  }
+}
+
+void TestingIndexUtil::ReadHelper(index::Index *index, type::AbstractPool *pool,
+                                    size_t scale_factor,
+                                    UNUSED_ATTRIBUTE uint64_t thread_itr) {
+  const catalog::Schema *key_schema = index->GetKeySchema();
+  std::vector<ItemPointer *> result;
+
+  // Loop based on scale factor
+  for (size_t scale_itr = 1; scale_itr <= scale_factor; scale_itr++) {
+    result.clear();
+    // Insert a bunch of keys based on scale itr
+    std::unique_ptr<storage::Tuple> key0(new storage::Tuple(key_schema, true));
+    std::unique_ptr<storage::Tuple> key1(new storage::Tuple(key_schema, true));
+    std::unique_ptr<storage::Tuple> key2(new storage::Tuple(key_schema, true));
+    std::unique_ptr<storage::Tuple> key3(new storage::Tuple(key_schema, true));
+    std::unique_ptr<storage::Tuple> key4(new storage::Tuple(key_schema, true));
+    std::unique_ptr<storage::Tuple> keynonce(
+      new storage::Tuple(key_schema, true));
+
+    key0->SetValue(0, type::ValueFactory::GetIntegerValue(100 * scale_itr + thread_itr),
+                   pool);
+    key0->SetValue(1, type::ValueFactory::GetVarcharValue("a"), pool);
+    key1->SetValue(0, type::ValueFactory::GetIntegerValue(100 * scale_itr + thread_itr),
+                   pool);
+    key1->SetValue(1, type::ValueFactory::GetVarcharValue("b"), pool);
+    // key2->SetValue(0, type::ValueFactory::GetIntegerValue(100 * scale_itr + thread_itr),
+    //                pool);
+    // key2->SetValue(1, type::ValueFactory::GetVarcharValue("c"), pool);
+    // key3->SetValue(0, type::ValueFactory::GetIntegerValue(400 * scale_itr + thread_itr),
+    //                pool);
+    // key3->SetValue(1, type::ValueFactory::GetVarcharValue("d"), pool);
+    key4->SetValue(0, type::ValueFactory::GetIntegerValue(500 * scale_itr + thread_itr),
+                   pool);
+    key4->SetValue(
+      1, type::ValueFactory::GetVarcharValue(StringUtil::Repeat("e", 1000)),
+      pool);
+    keynonce->SetValue(0, type::ValueFactory::GetIntegerValue(1000 * scale_itr + thread_itr),
+                       pool);
+    keynonce->SetValue(1, type::ValueFactory::GetVarcharValue("f"), pool);
+
+    // INSERT
+    // key0 1x (100, a)      -> item0
+    // key1 5x (100, b)      -> item1 2 1 1 0
+    // key2 1x (100, c)      -> item 1
+    // key3 1x (400, d)      -> item 1
+    // key4 1x (500, eee...) -> item 1
+    // no keyonce (1000, f)
+
+    // item0 = 2
+    // item1 = 6
+    // item2 = 1
+    index->ScanKey(key0.get(), result);
+    index->ScanKey(key1.get(), result);
+    index->ScanKey(key1.get(), result);
+//    index->InsertEntry(key1.get(), item1.get());
+//    index->InsertEntry(key1.get(), item1.get());
+    index->ScanKey(key1.get(), result);
+
+    // index->InsertEntry(key2.get(), item1.get());
+    // index->InsertEntry(key3.get(), item1.get());
+    index->ScanKey(key4.get(), result);
   }
 }
 

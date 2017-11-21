@@ -68,6 +68,9 @@ class TestingIndexUtil {
   static void InsertHelper(index::Index *index, type::AbstractPool *pool,
                          size_t scale_factor,
                          UNUSED_ATTRIBUTE uint64_t thread_itr);
+  static void ReadHelper(index::Index *index, type::AbstractPool *pool,
+                           size_t scale_factor,
+                           UNUSED_ATTRIBUTE uint64_t thread_itr);
 
   /**
    * Delete helper function
