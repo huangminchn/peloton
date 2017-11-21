@@ -185,6 +185,12 @@ TEST_F(RandomSelectTests, RandomSelectRecord) {
 //      new optimizer::Optimizer());
     auto plan =
       TestingSQLUtil::GeneratePlanWithOptimizer(optimizer, query, txn);
+//    PL_ASSERT(plan->GetPlanNodeType() != ty);
+//    PL_ASSERT(plan->GetPlanNodeType() == PlanNodeType::INDEXSCAN);
+//    if (plan->GetPlanNodeType() == PlanNodeType::INDEXSCAN) {
+//      printf("it is index scan plan!!\n");
+//    }
+
 //
 //    executor::IndexScanExecutor indexScanExecutor(plan.get(), context.get());
 //    indexScanExecutor.Init();
