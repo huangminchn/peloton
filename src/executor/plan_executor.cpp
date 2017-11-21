@@ -126,6 +126,7 @@ void PlanExecutor::ExecutePlan(
   auto query = compiler.Compile(*plan, consumer);
   timer.Stop();
   LOG_INFO("[CODEGEN] query compilation takes %.5lfs", timer.GetDuration());
+  timer.Reset();
   timer.Start();
   query->Execute(*txn, executor_context.get(),
                  reinterpret_cast<char *>(consumer.GetState()));
