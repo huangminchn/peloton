@@ -57,8 +57,8 @@ void PlanExecutor::ExecutePlan(
   if (!settings::SettingsManager::GetBool(settings::SettingId::codegen)
       || !codegen::QueryCompiler::IsSupported(*plan)) {
     bool status;
-//    Timer<> timer;
-//    timer.Start();
+Timer<> timer;
+timer.Start();
     std::unique_ptr<executor::AbstractExecutor> executor_tree(
         BuildExecutorTree(nullptr, plan.get(), executor_context.get()));
 
@@ -97,8 +97,8 @@ void PlanExecutor::ExecutePlan(
     p_status.m_result = ResultType::SUCCESS;
     p_status.m_result_slots = nullptr;
     CleanExecutorTree(executor_tree.get());
-//    timer.Stop();
-//    LOG_INFO("[INTERPRETER] query execution takes %.5lfs", timer.GetDuration());
+timer.Stop();
+LOG_INFO("[INTERPRETER] query execution takes %.8lfs", timer.GetDuration());
     return;
   }
 
@@ -125,13 +125,13 @@ void PlanExecutor::ExecutePlan(
   codegen::QueryCompiler compiler;
   auto query = compiler.Compile(*plan, consumer);
   timer.Stop();
-  LOG_INFO("[CODEGEN] query compilation takes %.5lfs", timer.GetDuration());
+  LOG_INFO("[CODEGEN] query compilation takes %.8lfs", timer.GetDuration());
   timer.Reset();
   timer.Start();
   query->Execute(*txn, executor_context.get(),
                  reinterpret_cast<char *>(consumer.GetState()));
   timer.Stop();
-  LOG_INFO("[CODEGEN] compiled query execution takes %.5lfs", timer.GetDuration());
+  LOG_INFO("[CODEGEN] compiled query execution takes %.8lfs", timer.GetDuration());
 
   // Iterate over results
   const auto &results = consumer.GetOutputTuples();

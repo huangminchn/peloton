@@ -950,7 +950,7 @@ parser::SQLStatement* PostgresParser::CreateIndexTransform(IndexStmt* root) {
     char* index_attr = reinterpret_cast<IndexElem*>(cell->data.ptr_value)->name;
     result->index_attrs.push_back(std::string(index_attr));
   }
-  result->index_type = IndexType::BWTREE;
+  result->index_type = IndexType::ART;
   result->table_info_.reset(new TableInfo());
   result->table_info_->table_name = root->relation->relname;
   result->index_name = root->idxname;
