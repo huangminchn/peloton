@@ -195,15 +195,21 @@ TEST_F(RandomSelectTests, RandomSelectRecord) {
   Timer<> timer;
   timer.Start();
 
+  Timer<> small_timer;
+
 //  // multi thread reads
 //  LaunchParallelTest(5, ReadHelper, optimizer.get(), 100, 1000);
 
-  int read_num = 10000;
+  int read_num = 100;
   for (int i = 0; i < read_num; i++) {
     int key_index = std::rand() % key_num;
     std::string  query = "select * from " + outer_table_name + " where c0 = " + std::to_string(key_array[key_index]);
+    small_timer.Reset();
+    small_timer.Start();
     auto plan =
       TestingSQLUtil::GeneratePlanWithOptimizer(optimizer, query, txn);
+    small_timer.Stop();
+    printf("optimizer takes %.8lfs\n", small_timer.GetDuration());
 
     const std::vector<type::Value> params;
     std::vector<StatementResult> result;
@@ -212,7 +218,11 @@ TEST_F(RandomSelectTests, RandomSelectRecord) {
 //    result_format.push_back(1);
 //    result_format.push_back(2);
     executor::ExecuteResult p_status;
+    small_timer.Reset();
+    small_timer.Start();
     executor::PlanExecutor::ExecutePlan(plan, txn, params, result, result_format, p_status);
+    small_timer.Stop();
+    printf("execution takes %.8lfs\n", small_timer.GetDuration());
   }
   timer.Stop();
   printf("read 10M tuples takes %.8lfs\n", timer.GetDuration());
