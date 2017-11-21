@@ -73,6 +73,9 @@ public:
   static void InsertHelperMicroBench(index::ArtIndex *index, size_t scale_factor,
                                      int num_rows, UNUSED_ATTRIBUTE uint64_t thread_itr);
 
+  static void ReadHelperMicroBench(index::ArtIndex *index, size_t scale_factor,
+                                     int num_rows, UNUSED_ATTRIBUTE uint64_t thread_itr);
+
   /**
    * Delete helper function
    */

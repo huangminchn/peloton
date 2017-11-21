@@ -197,6 +197,13 @@ void TestingArtUtil::MultiThreadedInsertTest(UNUSED_ATTRIBUTE const IndexType in
   artindex.ScanAllKeys(result);
   printf("Size = %lu\n", result.size());
 
+  timer.Reset();
+  timer.Start();
+  int read_num = 2000000;
+  LaunchParallelTest(20, TestingArtUtil::ReadHelperMicroBench, &artindex, scale_factor, read_num);
+  timer.Stop();
+  printf("read elapsed time = %.5lf\n", timer.GetDuration());
+
 //
 //  // wait for all the EpochGuard to deconstruct
 //  std::this_thread::sleep_for(std::chrono::milliseconds(10000));
@@ -502,6 +509,25 @@ void TestingArtUtil::InsertHelperMicroBench(index::ArtIndex *index, size_t scale
       auto &t = (index->artTree).getThreadInfo();
       bool insertSuccess = false;
       (index->artTree).insert(key_to_values[rowid].key, key_to_values[rowid].values[thread_itr], t, insertSuccess);
+    }
+  }
+}
+
+void TestingArtUtil::ReadHelperMicroBench(index::ArtIndex *index, size_t scale_factor,
+                                            int num_rows, UNUSED_ATTRIBUTE uint64_t thread_itr) {
+  // Loop based on scale factor
+  int random_start = std::rand() % 100000;
+  int step = 3;
+  int key_index = random_start;
+  for (size_t scale_itr = 1; scale_itr <= scale_factor; scale_itr++) {
+    for (int rowid = 0; rowid < num_rows; rowid++) {
+      auto &t = (index->artTree).getThreadInfo();
+      (index->artTree).lookup(key_to_values[key_index].key, t);
+
+      key_index += step;
+      if (key_index >= 100000) {
+        key_index = std::rand() % 100000;
+      }
     }
   }
 }
