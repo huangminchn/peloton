@@ -220,7 +220,7 @@ void TestingIndexUtil::MultiThreadedInsertTest(const IndexType index_type) {
 
   // Parallel Test
   size_t num_threads = 20;
-  size_t scale_factor = 200000;
+  size_t scale_factor = 20000;
 
   Timer<> timer;
   timer.Start();

@@ -81,7 +81,7 @@ public:
                            UNUSED_ATTRIBUTE uint64_t thread_itr);
 
   struct KeyAndValues {
-    std::array<uint64_t, 16> values;
+    std::array<uint64_t, 20> values;
     index::Key key;
   };
   static std::array<KeyAndValues, 100000> key_to_values;

@@ -188,7 +188,7 @@ void TestingArtUtil::MultiThreadedInsertTest(UNUSED_ATTRIBUTE const IndexType in
   size_t scale_factor = 1;
   Timer<> timer;
   timer.Start();
-  LaunchParallelTest(16, TestingArtUtil::InsertHelperMicroBench, &artindex, scale_factor, num_rows);
+  LaunchParallelTest(20, TestingArtUtil::InsertHelperMicroBench, &artindex, scale_factor, num_rows);
   timer.Stop();
   printf("elapsed time = %.5lf\n", timer.GetDuration());
 
@@ -392,7 +392,7 @@ void TestingArtUtil::PopulateMap(UNUSED_ATTRIBUTE index::Index &index) {
     key_to_values[i].key.set((const char *)index_key.data, index_key.getKeyLen());
 
     // generate 16 random values
-    for (int j = 0; j < 16; j++) {
+    for (int j = 0; j < 20; j++) {
       uint64_t new_value = ((uint64_t)(std::rand()) << 30) + ((uint64_t)(std::rand()) << 15) + (uint64_t)(std::rand());
       while (values_set.find(new_value) != values_set.end()) {
         new_value = ((uint64_t)(std::rand()) << 30) + ((uint64_t)(std::rand()) << 15) + (uint64_t)(std::rand());
@@ -512,7 +512,6 @@ void TestingArtUtil::DeleteHelper(storage::DataTable *table, UNUSED_ATTRIBUTE in
                                   UNUSED_ATTRIBUTE uint64_t thread_itr) {
   // get secondary index which is built on the first and second columns
   auto index = table->GetIndex(1);
-  printf("thread_iter = %llu\n", thread_itr);
   int start_row = thread_itr * num_rows;
   if (keys.size() < (uint64_t) start_row) {
     start_row = keys.size();
