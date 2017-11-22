@@ -82,6 +82,13 @@ class TestingIndexUtil {
   static std::shared_ptr<ItemPointer> item0;
   static std::shared_ptr<ItemPointer> item1;
   static std::shared_ptr<ItemPointer> item2;
+
+  struct KeyAndValues {
+    std::array<uint64_t, 20> values;
+    storage::Tuple *key;
+  };
+  static std::array<KeyAndValues, 100000> key_to_values;
+  static void PopulateMap(index::Index &index);
 };
 }  // namespace test
 }  // namespace peloton

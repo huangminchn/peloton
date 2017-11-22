@@ -24,9 +24,12 @@
 #include "type/types.h"
 #include "type/value_factory.h"
 #include "common/timer.h"
+#include "index/index.h"
 
 namespace peloton {
 namespace test {
+
+std::array<TestingIndexUtil::KeyAndValues, 100000> TestingIndexUtil::key_to_values;
 
 std::shared_ptr<ItemPointer> TestingIndexUtil::item0(new ItemPointer(120, 5));
 std::shared_ptr<ItemPointer> TestingIndexUtil::item1(new ItemPointer(120, 7));
@@ -912,6 +915,61 @@ void TestingIndexUtil::DeleteHelper(index::Index *index, type::AbstractPool *poo
     // key2 item 1
     // no key3
     // no key4
+  }
+}
+
+void TestingArtUtil::PopulateMap(UNUSED_ATTRIBUTE index::Index &index) {
+//  auto key_schema = index.GetKeySchema();
+//  catalog::Schema *table_schema = new catalog::Schema(
+//    {TestingExecutorUtil::GetColumnInfo(0), TestingExecutorUtil::GetColumnInfo(1)});
+
+  // Random values
+  std::srand(std::time(nullptr));
+  std::unordered_set<uint64_t> values_set;
+//  auto testing_pool = TestingHarness::GetInstance().GetTestingPool();
+
+  for (int i = 0; i < 100000; i++) {
+    // create the key
+    int populate_value = i;
+
+    auto v0 = type::ValueFactory::GetIntegerValue(
+      TestingExecutorUtil::PopulatedValue(populate_value, 0));
+
+    auto v1 = type::ValueFactory::GetIntegerValue(
+      TestingExecutorUtil::PopulatedValue(std::rand() % (100000 / 3), 1));
+
+    char *c = new char[8];
+    index::ArtIndex::WriteValueInBytes(v0, c, 0, 4);
+    index::ArtIndex::WriteValueInBytes(v1, c, 4, 4);
+
+//    storage::Tuple *key = new storage::Tuple(table_schema, true);
+//    key->SetValue(0, v0, testing_pool);
+//    key->SetValue(1, v1, testing_pool);
+//
+//    printf("%d\n", key->GetLength());
+
+    index::Key index_key;
+//    index::ArtIndex::WriteIndexedAttributesInKey(key, index_key);
+    index_key.setKeyLen(8);
+    index_key.set(c, 8);
+
+    key_to_values[i].key.setKeyLen(index_key.getKeyLen());
+    key_to_values[i].key.set((const char *)index_key.data, index_key.getKeyLen());
+
+    // generate 16 random values
+    for (int j = 0; j < 20; j++) {
+      uint64_t new_value = ((uint64_t)(std::rand()) << 30) + ((uint64_t)(std::rand()) << 15) + (uint64_t)(std::rand());
+      while (values_set.find(new_value) != values_set.end()) {
+        new_value = ((uint64_t)(std::rand()) << 30) + ((uint64_t)(std::rand()) << 15) + (uint64_t)(std::rand());
+      }
+      values_set.insert(new_value);
+
+      key_to_values[i].values[j] = new_value;
+//      value_to_key.insert(std::pair<index::TID, index::Key>((index::TID)new_value, index_key));
+      value_to_key[(index::TID)new_value] = &(key_to_values[i].key);
+    }
+
+
   }
 }
 
