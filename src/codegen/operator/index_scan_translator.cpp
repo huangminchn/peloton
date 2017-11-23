@@ -166,12 +166,13 @@ void IndexScanTranslator::Produce() const {
     llvm::Value *column_layouts = codegen->CreateAlloca(ColumnLayoutInfoProxy::GetType(codegen), codegen.Const32(num_columns));
 
     llvm::Value *distinct_tile_group_num = codegen.Call(IndexScanIteratorProxy::GetDistinctTileGroupNum, {iterator_ptr});
-    llvm::Value *distinct_tile_group_iter = codegen.Const32(0);
+    llvm::Value *distinct_tile_group_iter = codegen.Const64(0);
     lang::Loop loop{codegen,
                     codegen->CreateICmpULT(distinct_tile_group_iter, distinct_tile_group_num),
                     {{"distinctTileGroupIter", distinct_tile_group_iter}}};
     {
-//      distinct_tile_group_iter = loop.GetLoopVar(0);
+      distinct_tile_group_iter = loop.GetLoopVar(0);
+      printf("looping over tile group\n");
       llvm::Value *tile_group_id = codegen.Call(IndexScanIteratorProxy::GetTileGroupId, {iterator_ptr, distinct_tile_group_iter});
       llvm::Value *tile_group_ptr = codegen.Call(RuntimeFunctionsProxy::GetTileGroupByGlobalId, {table_ptr, tile_group_id});
 
@@ -194,6 +195,7 @@ void IndexScanTranslator::Produce() const {
       lang::VectorizedLoop vec_loop{codegen, num_tuples, batch_size, {}};
       {
         lang::VectorizedLoop::Range curr_range = vec_loop.GetCurrentRange();
+        printf("looping over tuples\n");
 
         // Pass the vector to the consumer
         TileGroup::TileGroupAccess tile_group_access{tileGroup, col_layouts};
@@ -250,7 +252,7 @@ void IndexScanTranslator::Produce() const {
 
 
       // Move to next tile group in the table
-      distinct_tile_group_iter = codegen->CreateAdd(distinct_tile_group_iter, codegen.Const32(1));
+      distinct_tile_group_iter = codegen->CreateAdd(distinct_tile_group_iter, codegen.Const64(1));
       loop.LoopEnd(codegen->CreateICmpULT(distinct_tile_group_iter, distinct_tile_group_num),
                    {distinct_tile_group_iter});
     }
