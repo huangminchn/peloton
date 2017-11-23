@@ -39,7 +39,6 @@ public:
   void DoScan();
   uint64_t GetDistinctTileGroupNum() { return (uint64_t)distinct_tile_group_num_; }
   uint64_t GetTileGroupId(uint64_t distinct_tile_index) {
-    printf("ask for distinct index = %llu\n", distinct_tile_index);
     return (uint64_t)(result_metadata_[3 * distinct_tile_index]);
   }
   bool RowOffsetInResult(uint64_t distinct_tile_index, uint32_t row_offset);

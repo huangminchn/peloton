@@ -135,15 +135,22 @@ void PlanExecutor::ExecutePlan(
 
   // Iterate over results
   const auto &results = consumer.GetOutputTuples();
-  for (const auto &tuple : results) {
-    for (uint32_t i = 0; i < tuple.tuple_.size(); i++) {
-      auto res = StatementResult();
-      auto column_val = tuple.GetValue(i);
-      auto str = column_val.IsNull() ? "" : column_val.ToString();
-      PlanExecutor::copyFromTo(str, res.second);
-      LOG_TRACE("column content: [%s]", str.c_str());
-      result.push_back(std::move(res));
+  printf("[CODEGEN] final results size = %lu\n", results.size());
+  if (plan->GetPlanNodeType() != PlanNodeType::INDEXSCAN) {
+
+
+    for (const auto &tuple : results) {
+      for (uint32_t i = 0; i < tuple.tuple_.size(); i++) {
+        auto res = StatementResult();
+        auto column_val = tuple.GetValue(i);
+        auto str = column_val.IsNull() ? "" : column_val.ToString();
+        PlanExecutor::copyFromTo(str, res.second);
+        LOG_TRACE("column content: [%s]", str.c_str());
+        result.push_back(std::move(res));
+      }
     }
+
+
   }
   p_status.m_processed = executor_context->num_processed;
   p_status.m_result = ResultType::SUCCESS;
