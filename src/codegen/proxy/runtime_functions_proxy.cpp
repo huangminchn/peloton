@@ -16,6 +16,8 @@
 #include "codegen/proxy/tile_group_proxy.h"
 #include "codegen/proxy/index_proxy.h"
 #include "codegen/proxy/result_and_key_proxy.h"
+#include "codegen/proxy/index_scan_iterator_proxy.h"
+#include "codegen/proxy/tuple_proxy.h"
 
 namespace peloton {
 namespace codegen {
@@ -31,8 +33,10 @@ DEFINE_METHOD(peloton::codegen, RuntimeFunctions, ThrowDivideByZeroException);
 DEFINE_METHOD(peloton::codegen, RuntimeFunctions, ThrowOverflowException);
 DEFINE_METHOD(peloton::codegen, RuntimeFunctions, ScanKey);
 DEFINE_METHOD(peloton::codegen, RuntimeFunctions, GetOneResultAndKey);
+DEFINE_METHOD(peloton::codegen, RuntimeFunctions, FreeOneResultAndKey);
 DEFINE_METHOD(peloton::codegen, RuntimeFunctions, GetTileGroupIdFromResult);
 DEFINE_METHOD(peloton::codegen, RuntimeFunctions, GetTileGroupOffsetFromResult);
 DEFINE_METHOD(peloton::codegen, RuntimeFunctions, IsValidTileGroup);
+DEFINE_METHOD(peloton::codegen, RuntimeFunctions, GetIterator);
 }  // namespace codegen
 }  // namespace peloton
