@@ -26,19 +26,7 @@ void IndexScanIterator::DoScan() {
   LOG_INFO("do scan in iterator");
   index_->CodeGenRangeScan(low_key_p_, high_key_p_, result_);
   LOG_INFO("result size = %lu\n", result_.size());
-  // debug
-  printf("before sorting:\n");
-  for (std::vector<ItemPointer *>::iterator it = result_.begin(); it != result_.end(); ++it) {
-    printf("%u %u\n", (*it)->block, (*it)->offset);
-  }
-  // debug
   std::sort(result_.begin(), result_.end(), SortByTileId);
-  // debug
-  printf("after sorting:\n");
-  for (std::vector<ItemPointer *>::iterator it = result_.begin(); it != result_.end(); ++it) {
-    printf("%u %u\n", (*it)->block, (*it)->offset);
-  }
-  // debug
 
   // find all distinct tile group id and their start/end position in result vector
   distinct_tile_group_num_ = 0;
