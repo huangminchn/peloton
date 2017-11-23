@@ -81,6 +81,8 @@ class ArtIndex : public Index {
 
   void CodeGenScanKey(uint64_t query_key, uint64_t result);
 
+  void CodeGenRangeScan(storage::Tuple *low_key_p, storage::Tuple *high_key_p, std::vector<ItemPointer *> &result);
+
   // TODO: Implement this
   size_t GetMemoryFootprint() { return 0; }
 

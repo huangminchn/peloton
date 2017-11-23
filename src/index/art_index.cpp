@@ -250,6 +250,40 @@ void ArtIndex::Scan(
   }
 }
 
+
+void ArtIndex::CodeGenRangeScan(storage::Tuple *low_key_p, storage::Tuple *high_key_p, std::vector<ItemPointer *> &result) {
+  ARTKey index_low_key, index_high_key, continue_key;
+  WriteIndexedAttributesInKey(low_key_p, index_low_key);
+  WriteIndexedAttributesInKey(high_key_p, index_high_key);
+
+  // check whether they are the same key; if so, use lookup
+  bool is_same_key = true;
+  if (index_low_key.getKeyLen() != index_high_key.getKeyLen()) {
+    is_same_key = false;
+  } else {
+    for (unsigned int i = 0; i < index_low_key.getKeyLen(); i++) {
+      if (index_low_key.data[i] != index_high_key.data[i]) {
+        is_same_key = false;
+        break;
+      }
+    }
+  }
+
+  if (is_same_key) {
+    ScanKey(low_key_p, result);
+    return;
+  }
+
+  // the range specify the maximum number of tuples retrieved in this scan
+  // the range parameter is unused so far, but it's useful in code gen
+  std::size_t range = 1000;
+  std::size_t actual_result_length = 0;
+
+  auto &t = art_.GetThreadInfo();
+  art_.LookupRange(index_low_key, index_high_key, continue_key, result, range,
+                   actual_result_length, t);
+}
+
 /*
  * ScanLimit() - Scan the index with predicate and limit/offset
  *
