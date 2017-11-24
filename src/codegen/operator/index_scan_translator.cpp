@@ -227,8 +227,8 @@ void IndexScanTranslator::Produce() const {
 
         // construct the final row batch
         // generate the row batch
-        RowBatch final_batch{this->GetCompilationContext(), tile_group_id, codegen.Const32(0),
-                       codegen.Const32(1), sel_vec, true};
+        RowBatch final_batch{this->GetCompilationContext(), tile_group_id, tid_start,
+                             tid_end, sel_vec, true};
 
         std::vector<TableScanTranslator::AttributeAccess> final_attribute_accesses;
         std::vector<const planner::AttributeInfo *> final_ais;
