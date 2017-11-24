@@ -99,6 +99,10 @@ void PlanExecutor::ExecutePlan(
     CleanExecutorTree(executor_tree.get());
     timer.Stop();
     LOG_INFO("[INTERPRETER] execution takes %.8lfs", timer.GetDuration());
+    // clear the output for index scan to skip the network
+    if (plan->GetPlanNodeType() == PlanNodeType::INDEXSCAN) {
+      result.clear();
+    }
     return;
   }
 
