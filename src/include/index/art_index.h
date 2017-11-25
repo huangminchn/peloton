@@ -79,8 +79,6 @@ class ArtIndex : public Index {
 
   void CodeGenScan(uint64_t csp, uint64_t continue_key, uint64_t &tile_id, uint64_t &tile_offset);
 
-  void CodeGenScanKey(uint64_t query_key, uint64_t result);
-
   void CodeGenRangeScan(storage::Tuple *low_key_p, storage::Tuple *high_key_p, std::vector<ItemPointer *> &result);
 
   // TODO: Implement this
