@@ -23,6 +23,7 @@
 #include "executor/executors.h"
 #include "storage/tuple_iterator.h"
 #include "settings/settings_manager.h"
+#include "common/timer.h"
 
 namespace peloton {
 namespace executor {
@@ -55,6 +56,8 @@ void PlanExecutor::ExecutePlan(
 
   if (!settings::SettingsManager::GetBool(settings::SettingId::codegen)
       || !codegen::QueryCompiler::IsSupported(*plan)) {
+    Timer<> timer;
+    timer.Start();
     bool status;
     std::unique_ptr<executor::AbstractExecutor> executor_tree(
         BuildExecutorTree(nullptr, plan.get(), executor_context.get()));
@@ -92,10 +95,16 @@ void PlanExecutor::ExecutePlan(
     p_status.m_result = ResultType::SUCCESS;
     p_status.m_result_slots = nullptr;
     CleanExecutorTree(executor_tree.get());
+    timer.Stop();
+    LOG_INFO("[INTERPRETER] execution takes %.8lfs", timer.GetDuration());
+    // clear the output for index scan to skip the network
+    if (plan->GetPlanNodeType() == PlanNodeType::INDEXSCAN) {
+      result.clear();
+    }
     return;
   }
 
-  LOG_TRACE("Compiling and executing query ...");
+  LOG_INFO("Compiling and executing query ...");
   // Perform binding
   planner::BindingContext context;
   plan->PerformBinding(context);
