@@ -265,6 +265,10 @@ void ArtIndex::CodeGenRangeScan(storage::Tuple *low_key_p, storage::Tuple *high_
                    actual_result_length, t);
 }
 
+void ArtIndex::CodeGenFullScan(std::vector<ItemPointer *> &result) {
+  ScanAllKeys(result);
+}
+
 /*
  * ScanLimit() - Scan the index with predicate and limit/offset
  *
