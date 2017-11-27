@@ -33,11 +33,6 @@ PROXY(RuntimeFunctions) {
   DECLARE_METHOD(GetTileGroupLayout);
   DECLARE_METHOD(ThrowDivideByZeroException);
   DECLARE_METHOD(ThrowOverflowException);
-  DECLARE_METHOD(GetOneResultAndKey);
-  DECLARE_METHOD(FreeOneResultAndKey);
-  DECLARE_METHOD(GetTileGroupIdFromResult);
-  DECLARE_METHOD(GetTileGroupOffsetFromResult);
-  DECLARE_METHOD(IsValidTileGroup);
   DECLARE_METHOD(GetIterator);
   DECLARE_METHOD(DeleteIterator);
 };

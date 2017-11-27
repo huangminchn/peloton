@@ -19,7 +19,6 @@
 #include "storage/data_table.h"
 #include "storage/tile_group.h"
 #include "storage/tile.h"
-#include "codegen/proxy/result_and_key_proxy.h"
 #include "codegen/util/index_scan_iterator.h"
 #include "storage/tuple.h"
 
@@ -109,31 +108,6 @@ void RuntimeFunctions::ThrowDivideByZeroException() {
 
 void RuntimeFunctions::ThrowOverflowException() {
   throw std::overflow_error("ERROR: overflow");
-}
-
-index::ResultAndKey* RuntimeFunctions::GetOneResultAndKey() {
-  index::ResultAndKey *new_result = new index::ResultAndKey();
-  return new_result;
-}
-
-void RuntimeFunctions::FreeOneResultAndKey(index::ResultAndKey *result) {
-  delete result;
-}
-
-uint64_t RuntimeFunctions::GetTileGroupIdFromResult(index::ResultAndKey* result) {
-  return (uint64_t)(result->tuple_p->block);
-}
-
-int32_t RuntimeFunctions::GetTileGroupOffsetFromResult(index::ResultAndKey* result) {
-  return result->tuple_p->offset;
-}
-
-bool RuntimeFunctions::IsValidTileGroup(index::ResultAndKey* result) {
-  if (result->tuple_p == (0lu)) {
-    return false;
-  } else {
-    return true;
-  }
 }
 
 util::IndexScanIterator *RuntimeFunctions::GetIterator(index::Index *index, uint64_t point_key_p, uint64_t low_key_p, uint64_t high_key_p) {
