@@ -93,7 +93,7 @@ class TestingIndexUtil {
     std::array<uint64_t, 20> values;
     storage::Tuple *key;
   };
-  static std::array<KeyAndValues, 100000> key_to_values;
+  static std::array<KeyAndValues, 10000000> key_to_values;
   static bool map_populated;
   static void PopulateMap(index::Index &index);
 };

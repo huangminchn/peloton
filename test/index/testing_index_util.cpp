@@ -31,7 +31,7 @@ namespace peloton {
 namespace test {
 
 bool TestingIndexUtil::map_populated = false;
-std::array<TestingIndexUtil::KeyAndValues, 100000> TestingIndexUtil::key_to_values;
+std::array<TestingIndexUtil::KeyAndValues, 10000000> TestingIndexUtil::key_to_values;
 
 std::shared_ptr<ItemPointer> TestingIndexUtil::item0(new ItemPointer(120, 5));
 std::shared_ptr<ItemPointer> TestingIndexUtil::item1(new ItemPointer(120, 7));
@@ -231,7 +231,7 @@ void TestingIndexUtil::MultiThreadedInsertTest(const IndexType index_type) {
 
   // Parallel Test
   size_t num_threads = 20;
-  int num_rows = 100000;
+  int num_rows = 10000000;
 
   size_t scale_factor = 1;
 
@@ -240,18 +240,18 @@ void TestingIndexUtil::MultiThreadedInsertTest(const IndexType index_type) {
   LaunchParallelTest(num_threads, TestingIndexUtil::InsertHelperMicroBench, index.get(),
                      pool, scale_factor, num_rows);
   timer.Stop();
-  printf("%lu tuples elapsed time = %.5lf\n", num_threads*scale_factor*5, timer.GetDuration());
+  printf("%lu tuples elapsed time = %.5lf\n", num_threads*scale_factor*num_rows, timer.GetDuration());
 
   index->ScanAllKeys(location_ptrs);
   printf("tuple size = %lu\n", location_ptrs.size());
 
   timer.Reset();
   timer.Start();
-  int read_num = 2000000;
+  int read_num = 10000000;
   LaunchParallelTest(num_threads, TestingIndexUtil::ReadHelperMicroBench, index.get(),
                      pool, scale_factor, read_num);
   timer.Stop();
-  printf("read elapsed time = %.5lf\n", timer.GetDuration());
+  printf("%lu tuples read elapsed time = %.5lf\n", num_threads*scale_factor*read_num, timer.GetDuration());
 //  EXPECT_EQ(location_ptrs.size(), 7);
 //  location_ptrs.clear();
 //
@@ -814,7 +814,6 @@ void TestingIndexUtil::InsertHelperMicroBench(index::Index *index, UNUSED_ATTRIB
   for (size_t scale_iter = 1; scale_iter <= scale_factor; scale_iter++) {
     for (int i = 0; i < num_rows; i++) {
       storage::Tuple* key = key_to_values[i].key;
-      printf("insertint tuple %d: %s\n", i, key->GetInfo().c_str());
 
       ItemPointer *value = (ItemPointer *)key_to_values[i].values[thread_itr];
 
@@ -976,7 +975,7 @@ void TestingIndexUtil::PopulateMap(UNUSED_ATTRIBUTE index::Index &index) {
   std::unordered_set<uint64_t> values_set;
   auto testing_pool = TestingHarness::GetInstance().GetTestingPool();
 
-  for (int i = 0; i < 100000; i++) {
+  for (int i = 0; i < 10000000; i++) {
     // create the key
     int populate_value = i;
 
@@ -986,7 +985,7 @@ void TestingIndexUtil::PopulateMap(UNUSED_ATTRIBUTE index::Index &index) {
 //      TestingExecutorUtil::PopulatedValue(std::rand() % (100000 / 3), 1));
     auto v1 =
       type::ValueFactory::GetVarcharValue(std::to_string(TestingExecutorUtil::PopulatedValue(
-        random ? std::rand() % (1000000 / 3) : populate_value, 3)));
+        random ? std::rand() % (10000000 / 3) : populate_value, 3)));
 
 
     storage::Tuple *key = new storage::Tuple(key_schema, true);
