@@ -68,9 +68,15 @@ class TestingIndexUtil {
   static void InsertHelper(index::Index *index, type::AbstractPool *pool,
                          size_t scale_factor,
                          UNUSED_ATTRIBUTE uint64_t thread_itr);
+  static void InsertHelperMicroBench(index::Index *index, type::AbstractPool *pool,
+                           size_t scale_factor, int num_rows,
+                           UNUSED_ATTRIBUTE uint64_t thread_itr);
   static void ReadHelper(index::Index *index, type::AbstractPool *pool,
                            size_t scale_factor,
                            UNUSED_ATTRIBUTE uint64_t thread_itr);
+  static void ReadHelperMicroBench(index::Index *index, type::AbstractPool *pool,
+                                   size_t scale_factor, int num_rows,
+                                   UNUSED_ATTRIBUTE uint64_t thread_itr);
 
   /**
    * Delete helper function
@@ -88,6 +94,7 @@ class TestingIndexUtil {
     storage::Tuple *key;
   };
   static std::array<KeyAndValues, 100000> key_to_values;
+  static bool map_populated;
   static void PopulateMap(index::Index &index);
 };
 }  // namespace test

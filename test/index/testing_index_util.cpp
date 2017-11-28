@@ -25,10 +25,12 @@
 #include "type/value_factory.h"
 #include "common/timer.h"
 #include "index/index.h"
+#include "executor/testing_executor_util.h"
 
 namespace peloton {
 namespace test {
 
+bool TestingIndexUtil::map_populated = false;
 std::array<TestingIndexUtil::KeyAndValues, 100000> TestingIndexUtil::key_to_values;
 
 std::shared_ptr<ItemPointer> TestingIndexUtil::item0(new ItemPointer(120, 5));
@@ -221,14 +223,22 @@ void TestingIndexUtil::MultiThreadedInsertTest(const IndexType index_type) {
       TestingIndexUtil::BuildIndex(index_type, false), DestroyIndex);
   // const catalog::Schema *key_schema = index->GetKeySchema();
 
+  index::Index &index_r = *index.get();
+  if (!map_populated) {
+    PopulateMap(index_r);
+    map_populated = true;
+  }
+
   // Parallel Test
   size_t num_threads = 20;
-  size_t scale_factor = 20000;
+  int num_rows = 100000;
+
+  size_t scale_factor = 1;
 
   Timer<> timer;
   timer.Start();
-  LaunchParallelTest(num_threads, TestingIndexUtil::InsertHelper, index.get(),
-                     pool, scale_factor);
+  LaunchParallelTest(num_threads, TestingIndexUtil::InsertHelperMicroBench, index.get(),
+                     pool, scale_factor, num_rows);
   timer.Stop();
   printf("%lu tuples elapsed time = %.5lf\n", num_threads*scale_factor*5, timer.GetDuration());
 
@@ -237,8 +247,9 @@ void TestingIndexUtil::MultiThreadedInsertTest(const IndexType index_type) {
 
   timer.Reset();
   timer.Start();
-  LaunchParallelTest(num_threads, TestingIndexUtil::ReadHelper, index.get(),
-                     pool, 200);
+  int read_num = 2000000;
+  LaunchParallelTest(num_threads, TestingIndexUtil::ReadHelperMicroBench, index.get(),
+                     pool, scale_factor, read_num);
   timer.Stop();
   printf("read elapsed time = %.5lf\n", timer.GetDuration());
 //  EXPECT_EQ(location_ptrs.size(), 7);
@@ -797,6 +808,21 @@ void TestingIndexUtil::InsertHelper(index::Index *index, type::AbstractPool *poo
   }
 }
 
+void TestingIndexUtil::InsertHelperMicroBench(index::Index *index, UNUSED_ATTRIBUTE type::AbstractPool *pool,
+                                    size_t scale_factor, int num_rows,
+                                    UNUSED_ATTRIBUTE uint64_t thread_itr) {
+  for (size_t scale_iter = 1; scale_iter <= scale_factor; scale_iter++) {
+    for (int i = 0; i < num_rows; i++) {
+      storage::Tuple* key = key_to_values[i].key;
+      printf("insertint tuple %d: %s\n", i, key->GetInfo().c_str());
+
+      ItemPointer *value = (ItemPointer *)key_to_values[i].values[thread_itr];
+
+      index->InsertEntry(key, value);
+    }
+  }
+}
+
 void TestingIndexUtil::ReadHelper(index::Index *index, type::AbstractPool *pool,
                                     size_t scale_factor,
                                     UNUSED_ATTRIBUTE uint64_t thread_itr) {
@@ -860,6 +886,27 @@ void TestingIndexUtil::ReadHelper(index::Index *index, type::AbstractPool *pool,
   }
 }
 
+void TestingIndexUtil::ReadHelperMicroBench(index::Index *index, UNUSED_ATTRIBUTE type::AbstractPool *pool,
+                                            size_t scale_factor, int num_rows,
+                                            UNUSED_ATTRIBUTE uint64_t thread_itr) {
+  // Loop based on scale factor
+  int random_start = std::rand() % 100000;
+  int step = 3;
+  int key_index = random_start;
+  std::vector<ItemPointer *> result;
+  for (size_t scale_itr = 1; scale_itr <= scale_factor; scale_itr++) {
+    for (int rowid = 0; rowid < num_rows; rowid++) {
+//      result.clear();
+      index->ScanKey(key_to_values[key_index].key, result);
+
+      key_index += step;
+      if (key_index >= 100000) {
+        key_index = std::rand() % 100000;
+      }
+    }
+  }
+}
+
 // DELETE HELPER FUNCTION
 void TestingIndexUtil::DeleteHelper(index::Index *index, type::AbstractPool *pool,
                                   size_t scale_factor,
@@ -918,55 +965,42 @@ void TestingIndexUtil::DeleteHelper(index::Index *index, type::AbstractPool *poo
   }
 }
 
-void TestingArtUtil::PopulateMap(UNUSED_ATTRIBUTE index::Index &index) {
-//  auto key_schema = index.GetKeySchema();
+void TestingIndexUtil::PopulateMap(UNUSED_ATTRIBUTE index::Index &index) {
+  auto key_schema = index.GetKeySchema();
 //  catalog::Schema *table_schema = new catalog::Schema(
 //    {TestingExecutorUtil::GetColumnInfo(0), TestingExecutorUtil::GetColumnInfo(1)});
 
   // Random values
+  bool random = true;
   std::srand(std::time(nullptr));
   std::unordered_set<uint64_t> values_set;
-//  auto testing_pool = TestingHarness::GetInstance().GetTestingPool();
+  auto testing_pool = TestingHarness::GetInstance().GetTestingPool();
 
   for (int i = 0; i < 100000; i++) {
     // create the key
     int populate_value = i;
 
-    auto v0 = type::ValueFactory::GetIntegerValue(
-      TestingExecutorUtil::PopulatedValue(populate_value, 0));
+    auto v0 = type::ValueFactory::GetIntegerValue(populate_value);
 
-    auto v1 = type::ValueFactory::GetIntegerValue(
-      TestingExecutorUtil::PopulatedValue(std::rand() % (100000 / 3), 1));
+//    auto v1 = type::ValueFactory::GetIntegerValue(
+//      TestingExecutorUtil::PopulatedValue(std::rand() % (100000 / 3), 1));
+    auto v1 =
+      type::ValueFactory::GetVarcharValue(std::to_string(TestingExecutorUtil::PopulatedValue(
+        random ? std::rand() % (1000000 / 3) : populate_value, 3)));
 
-    char *c = new char[8];
-    index::ArtIndex::WriteValueInBytes(v0, c, 0, 4);
-    index::ArtIndex::WriteValueInBytes(v1, c, 4, 4);
 
-//    storage::Tuple *key = new storage::Tuple(table_schema, true);
-//    key->SetValue(0, v0, testing_pool);
-//    key->SetValue(1, v1, testing_pool);
+    storage::Tuple *key = new storage::Tuple(key_schema, true);
+    key->SetValue(0, v0, testing_pool);
+    key->SetValue(1, v1, testing_pool);
+    key_to_values[i].key = key;
 //
 //    printf("%d\n", key->GetLength());
 
-    index::Key index_key;
-//    index::ArtIndex::WriteIndexedAttributesInKey(key, index_key);
-    index_key.setKeyLen(8);
-    index_key.set(c, 8);
-
-    key_to_values[i].key.setKeyLen(index_key.getKeyLen());
-    key_to_values[i].key.set((const char *)index_key.data, index_key.getKeyLen());
-
     // generate 16 random values
     for (int j = 0; j < 20; j++) {
-      uint64_t new_value = ((uint64_t)(std::rand()) << 30) + ((uint64_t)(std::rand()) << 15) + (uint64_t)(std::rand());
-      while (values_set.find(new_value) != values_set.end()) {
-        new_value = ((uint64_t)(std::rand()) << 30) + ((uint64_t)(std::rand()) << 15) + (uint64_t)(std::rand());
-      }
-      values_set.insert(new_value);
+      ItemPointer* new_value = new ItemPointer(std::abs(std::rand() % 100), std::abs(std::rand() % 1000000));
 
-      key_to_values[i].values[j] = new_value;
-//      value_to_key.insert(std::pair<index::TID, index::Key>((index::TID)new_value, index_key));
-      value_to_key[(index::TID)new_value] = &(key_to_values[i].key);
+      key_to_values[i].values[j] = (uint64_t)new_value;
     }
 
 
