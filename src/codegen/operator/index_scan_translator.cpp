@@ -167,43 +167,43 @@ void IndexScanTranslator::Produce() const {
                       raw_sel_vec});
     sel_vec.SetNumElements(out_idx);
 
-    // filter by predicate
-    const auto *predicate = index_scan_.GetPredicate();
-    if (predicate != nullptr) {
-      RowBatch batch{this->GetCompilationContext(), tile_group_id,
-                           codegen.Const32(0), codegen.Const32(1), sel_vec, true};
-      // Determine the attributes the predicate needs
-      std::unordered_set<const planner::AttributeInfo *> used_attributes;
-      predicate->GetUsedAttributes(used_attributes);
-      printf("used_attributes size = %lu\n", used_attributes.size());
-
-
-      // Setup the row batch with attribute accessors for the predicate
-      std::vector<TableScanTranslator::AttributeAccess> attribute_accessors;
-      for (const auto *ai : used_attributes) {
-        printf("used attributed name = %s\n", ai->name.c_str());
-        attribute_accessors.emplace_back(tile_group_access, ai);
-      }
-      for (uint32_t i = 0; i < attribute_accessors.size(); i++) {
-        auto &accessor = attribute_accessors[i];
-        printf("attribute accessor name = %s\n", accessor.GetAttributeRef()->name.c_str());
-        batch.AddAttribute(accessor.GetAttributeRef(), &accessor);
-      }
-
-      // Iterate over the batch using a scalar loop
-      batch.Iterate(codegen, [&](RowBatch::Row &row) {
-        // Evaluate the predicate to determine row validity
-        codegen::Value valid_row = row.DeriveValue(codegen, *predicate);
-
-        // Reify the boolean value since it may be NULL
-        PL_ASSERT(valid_row.GetType().GetSqlType() == type::Boolean::Instance());
-        llvm::Value *bool_val = type::Boolean::Instance().Reify(codegen, valid_row);
-
-        // Set the validity of the row
-        row.SetValidity(codegen, bool_val);
-      });
-    }
-    printf("good after filtering by predicate\n");
+//    // filter by predicate
+//    const auto *predicate = index_scan_.GetPredicate();
+//    if (predicate != nullptr) {
+//      RowBatch batch{this->GetCompilationContext(), tile_group_id,
+//                           codegen.Const32(0), codegen.Const32(1), sel_vec, true};
+//      // Determine the attributes the predicate needs
+//      std::unordered_set<const planner::AttributeInfo *> used_attributes;
+//      predicate->GetUsedAttributes(used_attributes);
+//      printf("used_attributes size = %lu\n", used_attributes.size());
+//
+//
+//      // Setup the row batch with attribute accessors for the predicate
+//      std::vector<TableScanTranslator::AttributeAccess> attribute_accessors;
+//      for (const auto *ai : used_attributes) {
+//        printf("used attributed name = %s\n", ai->name.c_str());
+//        attribute_accessors.emplace_back(tile_group_access, ai);
+//      }
+//      for (uint32_t i = 0; i < attribute_accessors.size(); i++) {
+//        auto &accessor = attribute_accessors[i];
+//        printf("attribute accessor name = %s\n", accessor.GetAttributeRef()->name.c_str());
+//        batch.AddAttribute(accessor.GetAttributeRef(), &accessor);
+//      }
+//
+//      // Iterate over the batch using a scalar loop
+//      batch.Iterate(codegen, [&](RowBatch::Row &row) {
+//        // Evaluate the predicate to determine row validity
+//        codegen::Value valid_row = row.DeriveValue(codegen, *predicate);
+//
+//        // Reify the boolean value since it may be NULL
+//        PL_ASSERT(valid_row.GetType().GetSqlType() == type::Boolean::Instance());
+//        llvm::Value *bool_val = type::Boolean::Instance().Reify(codegen, valid_row);
+//
+//        // Set the validity of the row
+//        row.SetValidity(codegen, bool_val);
+//      });
+//    }
+//    printf("good after filtering by predicate\n");
 
     // construct the final row batch
     // one tuple per row batch
@@ -213,6 +213,7 @@ void IndexScanTranslator::Produce() const {
     std::vector<TableScanTranslator::AttributeAccess> final_attribute_accesses;
     std::vector<const planner::AttributeInfo *> final_ais;
     index_scan_.GetAttributes(final_ais);
+    printf("final_ais size = %lud\n", final_ais.size());
     std::vector<oid_t> output_col_ids;
     if (index_scan_.GetColumnIds().size() != 0) {
       output_col_ids = index_scan_.GetColumnIds();
