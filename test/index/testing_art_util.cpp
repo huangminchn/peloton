@@ -187,6 +187,14 @@ void TestingArtUtil::MultiThreadedInsertTest(UNUSED_ATTRIBUTE const IndexType
   art_index.ScanAllKeys(result);
   EXPECT_EQ(num_rows * num_threads, result.size());
 
+  timer.Reset();
+  timer.Start();
+  LaunchParallelTest(num_threads, TestingArtUtil::ReadHelperMicroBench,
+                     &art_index, num_rows);
+  timer.Stop();
+  LOG_INFO("20,000,000 tuples readed in %.5lfs", timer.GetDuration());
+  
+
 //  int test_key_index = std::rand() % num_rows;
 //  result.clear();
 //  art_index.ScanKey(key_to_values[test_key_index].tuple, result);
