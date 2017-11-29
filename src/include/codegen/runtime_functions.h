@@ -54,7 +54,7 @@ class RuntimeFunctions {
                                           uint64_t tile_group_index);
 
   static storage::TileGroup *GetTileGroupByGlobalId(storage::DataTable *table,
-                                                    uint64_t tile_group_id);
+                                                    uint32_t tile_group_id);
 
   // This struct represents the layout (or configuration) of a column in a
   // tile group. A configuration is characterized by two properties: its
