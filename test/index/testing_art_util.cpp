@@ -546,8 +546,10 @@ void TestingArtUtil::ReadHelperMicroBench(index::ArtIndex *index,
   std::vector<ItemPointer *> result;
   for (int rowid = 0; rowid < num_rows; rowid++) {
     result.clear();
-    index->ScanKey(key_to_values[rowid].tuple, result);
-    EXPECT_EQ(20, result.size());
+    auto &t = index->art_.GetThreadInfo();
+    index->art_.Lookup(key_to_values[rowid].key, t, result);
+//    index->ScanKey(key_to_values[rowid].tuple, result);
+//    EXPECT_EQ(20, result.size());
   }
 }
 
