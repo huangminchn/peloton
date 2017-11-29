@@ -110,6 +110,9 @@ void UpdateTranslator::Consume(ConsumerContext &, RowBatch::Row &row) const {
   llvm::Value *tuple_ptr;
   std::vector<llvm::Value *> prep_args = {updater, row.GetTileGroupID(),
                                           row.GetTID(codegen)};
+  prep_args[0]->dump();
+  prep_args[1]->dump();
+  prep_args[2]->dump();
   if (update_plan_.GetUpdatePrimaryKey() == false)
     tuple_ptr = codegen.Call(UpdaterProxy::Prepare, prep_args);
   else
