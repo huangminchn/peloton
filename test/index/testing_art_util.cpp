@@ -42,14 +42,17 @@ std::array<TestingArtUtil::KeyAndValues, 1000000> TestingArtUtil::key_to_values;
 void loadKeyForTest(index::TID tid, index::ARTKey &key,
                     UNUSED_ATTRIBUTE index::IndexMetadata *metadata) {
   index::MultiValues *value_list = reinterpret_cast<index::MultiValues *>(tid);
-  if (TestingArtUtil::value_to_key.find(value_list->tid) !=
-      TestingArtUtil::value_to_key.end()) {
-    index::ARTKey *key_p = TestingArtUtil::value_to_key.at(value_list->tid);
-    key.setKeyLen(key_p->getKeyLen());
-    key.set((const char *)(key_p->data), key.getKeyLen());
-    return;
-  }
-  key = 0;
+  index::ARTKey *key_p = &TestingArtUtil::key_to_values[value_list->tid].key;
+  key.setKeyLen(key_p->getKeyLen());
+  key.set((const char *)(key_p->data), key.getKeyLen());
+//  if (TestingArtUtil::value_to_key.find(value_list->tid) !=
+//      TestingArtUtil::value_to_key.end()) {
+//    index::ARTKey *key_p = TestingArtUtil::value_to_key.at(value_list->tid);
+//    key.setKeyLen(key_p->getKeyLen());
+//    key.set((const char *)(key_p->data), key.getKeyLen());
+//    return;
+//  }
+//  key = 0;
 }
 
 void TestingArtUtil::BasicTest(UNUSED_ATTRIBUTE const IndexType index_type) {
@@ -442,17 +445,18 @@ void TestingArtUtil::PopulateMap(UNUSED_ATTRIBUTE index::Index &index) {
 
     // generate 16 random values
     for (int j = 0; j < 20; j++) {
-      uint64_t new_value = ((uint64_t)(std::rand()) << 30) +
-                           ((uint64_t)(std::rand()) << 15) +
-                           (uint64_t)(std::rand());
-      while (values_set.find(new_value) != values_set.end()) {
-        new_value = ((uint64_t)(std::rand()) << 30) +
-                    ((uint64_t)(std::rand()) << 15) + (uint64_t)(std::rand());
-      }
-      values_set.insert(new_value);
+//      uint64_t new_value = ((uint64_t)(std::rand()) << 30) +
+//                           ((uint64_t)(std::rand()) << 15) +
+//                           (uint64_t)(std::rand());
+//      while (values_set.find(new_value) != values_set.end()) {
+//        new_value = ((uint64_t)(std::rand()) << 30) +
+//                    ((uint64_t)(std::rand()) << 15) + (uint64_t)(std::rand());
+//      }
+//      values_set.insert(new_value);
+      uint64_t new_value = i;
 
       key_to_values[i].values[j] = new_value;
-      value_to_key[(index::TID)new_value] = &(key_to_values[i].key);
+//      value_to_key[(index::TID)new_value] = &(key_to_values[i].key);
     }
 
     delete[] c;
