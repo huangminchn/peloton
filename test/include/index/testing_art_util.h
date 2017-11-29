@@ -102,7 +102,7 @@ class TestingArtUtil {
     index::ARTKey key;
     storage::Tuple *tuple;
   };
-  static std::array<KeyAndValues, 1000000> key_to_values;
+  static std::array<KeyAndValues, 10000000> key_to_values;
   static std::map<index::TID, index::ARTKey *> value_to_key;
   static bool map_populated;
 

@@ -37,7 +37,7 @@ namespace test {
 
 bool TestingArtUtil::map_populated = false;
 std::map<index::TID, index::ARTKey *> TestingArtUtil::value_to_key;
-std::array<TestingArtUtil::KeyAndValues, 1000000> TestingArtUtil::key_to_values;
+std::array<TestingArtUtil::KeyAndValues, 10000000> TestingArtUtil::key_to_values;
 
 void loadKeyForTest(index::TID tid, index::ARTKey &key,
                     UNUSED_ATTRIBUTE index::IndexMetadata *metadata) {
@@ -176,8 +176,8 @@ void TestingArtUtil::MultiThreadedInsertTest(UNUSED_ATTRIBUTE const IndexType
     PopulateMap(art_index);
   }
 
-  int num_rows = 1000000;
-  size_t num_threads = 20;
+  int num_rows = 10000000;
+  size_t num_threads = 1;
 
   Timer<> timer;
   timer.Start();
@@ -415,7 +415,7 @@ void TestingArtUtil::PopulateMap(UNUSED_ATTRIBUTE index::Index &index) {
   std::unordered_set<uint64_t> values_set;
   auto testing_pool = TestingHarness::GetInstance().GetTestingPool();
 
-  for (int i = 0; i < 1000000; i++) {
+  for (int i = 0; i < 10000000; i++) {
     // create the key
     int populate_value = i;
 
@@ -423,7 +423,7 @@ void TestingArtUtil::PopulateMap(UNUSED_ATTRIBUTE index::Index &index) {
         TestingExecutorUtil::PopulatedValue(populate_value, 0));
 
     auto v1 = type::ValueFactory::GetIntegerValue(
-        TestingExecutorUtil::PopulatedValue(std::rand() % (1000000 / 3), 1));
+        TestingExecutorUtil::PopulatedValue(std::rand() % (10000000 / 3), 1));
 
     char *c = new char[8];
     index::ArtIndex::WriteValueInBytes(v0, c, 0, 4);
