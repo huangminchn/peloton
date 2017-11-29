@@ -533,9 +533,12 @@ void TestingArtUtil::InsertHelperMicroBench(index::ArtIndex *index,
                                             int num_rows,
                                             UNUSED_ATTRIBUTE uint64_t
                                                 thread_itr) {
+  bool insert_success = false;
   for (int rowid = 0; rowid < num_rows; rowid++) {
-    index->InsertEntry(key_to_values[rowid].tuple,
-                       (ItemPointer *)key_to_values[rowid].values[thread_itr]);
+//    index->InsertEntry(key_to_values[rowid].tuple,
+//                       (ItemPointer *)key_to_values[rowid].values[thread_itr]);
+    auto &t = index->art_.GetThreadInfo();
+    index->art_.Insert(key_to_values[rowid].key, key_to_values[rowid].values[thread_itr], t, insert_success);
   }
 }
 
