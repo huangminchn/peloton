@@ -78,6 +78,10 @@ class TestingIndexUtil {
                                    size_t scale_factor, int num_rows,
                                    UNUSED_ATTRIBUTE uint64_t thread_itr);
 
+  static void DeleteHelperMicroBench(index::Index *index, type::AbstractPool *pool,
+                                   size_t scale_factor, int num_rows,
+                                   UNUSED_ATTRIBUTE uint64_t thread_itr);
+
   /**
    * Delete helper function
    */
@@ -93,7 +97,7 @@ class TestingIndexUtil {
     std::array<uint64_t, 20> values;
     storage::Tuple *key;
   };
-  static std::array<KeyAndValues, 10000000> key_to_values;
+  static std::array<KeyAndValues, 1000000> key_to_values;
   static bool map_populated;
   static void PopulateMap(index::Index &index);
 };

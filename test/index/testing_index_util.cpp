@@ -38,7 +38,7 @@ namespace peloton {
 namespace test {
 
 bool TestingIndexUtil::map_populated = false;
-std::array<TestingIndexUtil::KeyAndValues, 10000000> TestingIndexUtil::key_to_values;
+std::array<TestingIndexUtil::KeyAndValues, 1000000> TestingIndexUtil::key_to_values;
 
 std::shared_ptr<ItemPointer> TestingIndexUtil::item0(new ItemPointer(120, 5));
 std::shared_ptr<ItemPointer> TestingIndexUtil::item1(new ItemPointer(120, 7));
@@ -281,7 +281,7 @@ void TestingIndexUtil::MultiThreadedInsertTest(const IndexType index_type) {
 
   // Parallel Test
   size_t num_threads = 20;
-  int num_rows = 10000000;
+  int num_rows = 1000000;
 
   size_t scale_factor = 1;
 
@@ -318,11 +318,19 @@ void TestingIndexUtil::MultiThreadedInsertTest(const IndexType index_type) {
 
   timer.Reset();
   timer.Start();
-  int read_num = 10000000;
+  int read_num = 1000000;
   LaunchParallelTest(num_threads, TestingIndexUtil::ReadHelperMicroBench, index.get(),
                      pool, scale_factor, read_num);
   timer.Stop();
   printf("%lu tuples read elapsed time = %.5lf\n", num_threads*scale_factor*read_num, timer.GetDuration());
+
+  timer.Reset();
+  timer.Start();
+  int delete_num = 1000000;
+  LaunchParallelTest(num_threads, TestingIndexUtil::DeleteHelperMicroBench, index.get(),
+                     pool, scale_factor, delete_num);
+  timer.Stop();
+  printf("%lu tuples delete elapsed time = %.5lf\n", num_threads*scale_factor*read_num, timer.GetDuration());
 //  EXPECT_EQ(location_ptrs.size(), 7);
 //  location_ptrs.clear();
 //
@@ -977,6 +985,19 @@ void TestingIndexUtil::ReadHelperMicroBench(index::Index *index, UNUSED_ATTRIBUT
   }
 }
 
+void TestingIndexUtil::DeleteHelperMicroBench(index::Index *index, UNUSED_ATTRIBUTE type::AbstractPool *pool,
+                                            size_t scale_factor, int num_rows,
+                                            UNUSED_ATTRIBUTE uint64_t thread_itr) {
+  // Loop based on scale factor
+  std::vector<ItemPointer *> result;
+  for (size_t scale_itr = 1; scale_itr <= scale_factor; scale_itr++) {
+    for (int rowid = 0; rowid < num_rows; rowid++) {
+//      result.clear();
+      index->DeleteEntry(key_to_values[rowid].key, (ItemPointer *)key_to_values[rowid].values[thread_itr]);
+    }
+  }
+}
+
 // DELETE HELPER FUNCTION
 void TestingIndexUtil::DeleteHelper(index::Index *index, type::AbstractPool *pool,
                                   size_t scale_factor,
@@ -1046,7 +1067,7 @@ void TestingIndexUtil::PopulateMap(UNUSED_ATTRIBUTE index::Index &index) {
   std::unordered_set<uint64_t> values_set;
   auto testing_pool = TestingHarness::GetInstance().GetTestingPool();
 
-  for (int i = 0; i < 10000000; i++) {
+  for (int i = 0; i < 1000000; i++) {
     // create the key
     int populate_value = i;
 
@@ -1056,7 +1077,7 @@ void TestingIndexUtil::PopulateMap(UNUSED_ATTRIBUTE index::Index &index) {
 //      TestingExecutorUtil::PopulatedValue(std::rand() % (100000 / 3), 1));
     auto v1 =
       type::ValueFactory::GetVarcharValue(std::to_string(TestingExecutorUtil::PopulatedValue(
-        random ? std::rand() % (10000000 / 3) : populate_value, 3)));
+        random ? std::rand() % (1000000 / 3) : populate_value, 3)));
 
 
     storage::Tuple *key = new storage::Tuple(key_schema, true);
