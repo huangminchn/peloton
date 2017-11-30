@@ -177,7 +177,7 @@ void TestingArtUtil::MultiThreadedInsertTest(UNUSED_ATTRIBUTE const IndexType
   }
 
   int num_rows = 10000000;
-  size_t num_threads = 1;
+  size_t num_threads = 20;
 
   Timer<> timer;
   timer.Start();
@@ -196,6 +196,14 @@ void TestingArtUtil::MultiThreadedInsertTest(UNUSED_ATTRIBUTE const IndexType
                      &art_index, num_rows);
   timer.Stop();
   LOG_INFO("20,000,000 tuples readed in %.5lfs", timer.GetDuration());
+
+
+  timer.Reset();
+  timer.Start();
+  LaunchParallelTest(num_threads, TestingArtUtil::DeleteHelperMicroBench,
+                     &art_index, num_rows);
+  timer.Stop();
+  LOG_INFO("20,000,000 tuples deleted in %.5lfs", timer.GetDuration());
   
 
 //  int test_key_index = std::rand() % num_rows;
