@@ -97,21 +97,22 @@ void PlanExecutor::ExecutePlan(
     return;
   }
 
-  LOG_TRACE("Compiling and executing query ...");
+  LOG_INFO("Compiling and executing query ...");
   // Perform binding
   planner::BindingContext context;
   plan->PerformBinding(context);
   // Prepare output buffer
   std::vector<oid_t> columns;
-  if (plan->GetPlanNodeType() == PlanNodeType::INDEXSCAN) {
-    // must use GetColumnIds() function in index scan plan node
-    // to get output columns, because the column_ids_ variable
-    // in IndexScanPlan class is different from the column_ids_
-    // variable in its parent class AbstractScan!
-    columns = (dynamic_cast<planner::IndexScanPlan &>(*plan)).GetColumnIds();
-  } else {
-    plan->GetOutputColumns(columns);
-  }
+//  if (plan->GetPlanNodeType() == PlanNodeType::INDEXSCAN) {
+//    // must use GetColumnIds() function in index scan plan node
+//    // to get output columns, because the column_ids_ variable
+//    // in IndexScanPlan class is different from the column_ids_
+//    // variable in its parent class AbstractScan!
+//    columns = (dynamic_cast<planner::IndexScanPlan &>(*plan)).GetColumnIds();
+//  } else {
+//    plan->GetOutputColumns(columns);
+//  }
+  plan->GetOutputColumns(columns);
   codegen::BufferingConsumer consumer{columns, context};
 
   // Compile & execute the query
@@ -119,6 +120,7 @@ void PlanExecutor::ExecutePlan(
   auto query = compiler.Compile(*plan, consumer);
   query->Execute(*txn, executor_context.get(),
                  reinterpret_cast<char *>(consumer.GetState()));
+  printf("yooo! good after executing!\n");
 
   // Iterate over results
   const auto &results = consumer.GetOutputTuples();
