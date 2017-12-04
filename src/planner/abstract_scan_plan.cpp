@@ -18,6 +18,7 @@ namespace peloton {
 namespace planner {
 
 void AbstractScan::PerformBinding(BindingContext &binding_context) {
+  printf("WARNING!! perform binding in abstrac scan plan!\n");
   const auto &children = GetChildren();
   if (children.size() > 0) {
     // We're scanning some intermediate result. This scan node doesn't produce
@@ -44,11 +45,34 @@ void AbstractScan::PerformBinding(BindingContext &binding_context) {
       attributes_.push_back(AttributeInfo{type, col_id, column.GetName()});
     }
 
+//    if (GetPlanNodeType() == PlanNodeType::INDEXSCAN) {
+//      // Perform attribute binding only for actual output columns
+//      std::vector<oid_t> input_col_ids;
+//      input_col_ids.resize(target_table_->GetSchema()->GetColumnCount());
+//      std::iota(input_col_ids.begin(), input_col_ids.end(), 0);
+//      for (oid_t col_id = 0; col_id < input_col_ids.size(); col_id++) {
+//        const auto &ai = attributes_[input_col_ids[col_id]];
+//        LOG_INFO("Attribute '%s.%s' (%u) binds to AI %p",
+//                 GetTable()->GetName().c_str(), ai.name.c_str(), col_id, &ai);
+//        binding_context.BindNew(col_id, &ai);
+//      }
+//    } else {
+//      // Perform attribute binding only for actual output columns
+//      const auto &input_col_ids = GetColumnIds();
+//      for (oid_t col_id = 0; col_id < input_col_ids.size(); col_id++) {
+//        const auto &ai = attributes_[input_col_ids[col_id]];
+//        LOG_INFO("Attribute '%s.%s' (%u) binds to AI %p",
+//                 GetTable()->GetName().c_str(), ai.name.c_str(), col_id, &ai);
+//        binding_context.BindNew(col_id, &ai);
+//      }
+//    }
+
+
     // Perform attribute binding only for actual output columns
     const auto &input_col_ids = GetColumnIds();
     for (oid_t col_id = 0; col_id < input_col_ids.size(); col_id++) {
       const auto &ai = attributes_[input_col_ids[col_id]];
-      LOG_DEBUG("Attribute '%s.%s' (%u) binds to AI %p",
+      LOG_INFO("Attribute '%s.%s' (%u) binds to AI %p",
                 GetTable()->GetName().c_str(), ai.name.c_str(), col_id, &ai);
       binding_context.BindNew(col_id, &ai);
     }

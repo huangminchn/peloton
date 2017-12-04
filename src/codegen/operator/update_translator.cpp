@@ -83,27 +83,37 @@ void UpdateTranslator::Produce() const {
 }
 
 void UpdateTranslator::Consume(ConsumerContext &, RowBatch::Row &row) const {
+  printf("update translator consuming\n");
   auto &codegen = GetCodeGen();
   const auto *project_info = update_plan_.GetProjectInfo();
   auto target_list = project_info->GetTargetList();
   auto direct_map_list = project_info->GetDirectMapList();
   uint32_t column_num =
       static_cast<uint32_t>(target_list.size() + direct_map_list.size());
+  printf("column_num = %u\n", column_num);
   auto &ais = update_plan_.GetAttributeInfos();
 
   // Collect all the column values
   std::vector<codegen::Value> values;
   for (uint32_t i = 0, target_id = 0; i < column_num; i++) {
+    printf("collecting column %u\n", i);
     codegen::Value val;
+    printf("1\n");
     if (IsTarget(target_list, i)) {
       // Set the value for the update
+      printf("2\n");
       const auto &derived_attribute = target_list[target_id].second;
+      printf("3\n");
       val = row.DeriveValue(codegen, *derived_attribute.expr);
+      printf("4\n");
       target_id++;
     } else {
+      printf("5\n");
       val = row.DeriveValue(codegen, ais[i]);
+      printf("6\n");
     }
     values.push_back(val);
+    printf("7\n");
   }
 
   // Get the tuple pointer from the updater
@@ -137,6 +147,7 @@ void UpdateTranslator::Consume(ConsumerContext &, RowBatch::Row &row) const {
     }
   }
   prepare_success.EndIf();
+  printf("update translator consume done\n");
 }
 
 void UpdateTranslator::TearDownState() {

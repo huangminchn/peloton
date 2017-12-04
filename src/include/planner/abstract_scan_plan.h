@@ -34,10 +34,14 @@ class AbstractScan : public AbstractPlan {
   AbstractScan(storage::DataTable *table,
                expression::AbstractExpression *predicate,
                const std::vector<oid_t> &column_ids)
-      : target_table_(table), predicate_(predicate), column_ids_(column_ids) {}
+      : target_table_(table), predicate_(predicate), column_ids_(column_ids) {
+    printf("constructing an abstract scan with parameter columns ids\n");
+  }
 
   // We should add an empty constructor to support an empty object
-  AbstractScan() : target_table_(nullptr), predicate_(nullptr) {}
+  AbstractScan() : target_table_(nullptr), predicate_(nullptr) {
+    printf("constructing an abstract scan with nothing\n");
+  }
 
   inline const expression::AbstractExpression *GetPredicate() const {
     return predicate_.get();

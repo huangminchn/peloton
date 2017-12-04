@@ -213,7 +213,10 @@ void IndexScanTranslator::Produce() const {
     std::vector<TableScanTranslator::AttributeAccess> final_attribute_accesses;
     std::vector<const planner::AttributeInfo *> final_ais;
     index_scan_.GetAttributes(final_ais);
-    printf("final_ais size = %lud\n", final_ais.size());
+    printf("[index scan] final_ais size = %lud\n", final_ais.size());
+    for (uint32_t i = 0; i < final_ais.size(); i++) {
+      printf("final_ais[%d] = %s\n", i, final_ais[i]->name.c_str());
+    }
     std::vector<oid_t> output_col_ids;
     if (index_scan_.GetColumnIds().size() != 0) {
       output_col_ids = index_scan_.GetColumnIds();
@@ -227,6 +230,7 @@ void IndexScanTranslator::Produce() const {
     for (oid_t col_idx = 0; col_idx < output_col_ids.size(); col_idx++) {
       final_attribute_accesses.emplace_back(tile_group_access,
                                             final_ais[output_col_ids[col_idx]]);
+      printf("[index scan] add %s to final attribute access\n", final_ais[output_col_ids[col_idx]]->name.c_str());
     }
     for (oid_t col_idx = 0; col_idx < output_col_ids.size(); col_idx++) {
       auto *attribute = final_ais[output_col_ids[col_idx]];

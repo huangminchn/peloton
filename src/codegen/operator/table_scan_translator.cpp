@@ -145,12 +145,17 @@ void TableScanTranslator::ScanConsumer::SetupRowBatch(
   const auto &scan_plan = translator_.GetScanPlan();
   std::vector<const planner::AttributeInfo *> ais;
   scan_plan.GetAttributes(ais);
+  printf("[seq scan] ais size = %lud\n", ais.size());
+  for (uint32_t i = 0; i < ais.size(); i++) {
+    printf("final_ais[%d] = %s\n", i, ais[i]->name.c_str());
+  }
   const auto &output_col_ids = scan_plan.GetColumnIds();
 
   // 1. Put all the attribute accessors into a vector
   access.clear();
   for (oid_t col_idx = 0; col_idx < output_col_ids.size(); col_idx++) {
     access.emplace_back(tile_group_access, ais[output_col_ids[col_idx]]);
+    printf("[seq scan] add %s to final attribute access\n", ais[output_col_ids[col_idx]]->name.c_str());
   }
 
   // 2. Add the attribute accessors into the row batch
