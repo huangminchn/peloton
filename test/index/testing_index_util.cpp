@@ -26,6 +26,7 @@
 #include "common/timer.h"
 #include "index/index.h"
 #include "executor/testing_executor_util.h"
+#include "index/scan_optimizer.h"
 
 /*
 
@@ -324,13 +325,31 @@ void TestingIndexUtil::MultiThreadedInsertTest(const IndexType index_type) {
   timer.Stop();
   printf("%lu tuples read elapsed time = %.5lf\n", num_threads*scale_factor*read_num, timer.GetDuration());
 
+
   timer.Reset();
   timer.Start();
-  int delete_num = 1000000;
-  LaunchParallelTest(num_threads, TestingIndexUtil::DeleteHelperMicroBench, index.get(),
-                     pool, scale_factor, delete_num);
+  read_num = 100;
+  scale_factor = 1;
+  LaunchParallelTest(num_threads, TestingIndexUtil::ScanHelperMicroBench, index.get(),
+                     pool, scale_factor, read_num);
   timer.Stop();
-  printf("%lu tuples delete elapsed time = %.5lf\n", num_threads*scale_factor*read_num, timer.GetDuration());
+  printf("%lu tuples scan elapsed time = %.5lf\n", num_threads*scale_factor*read_num, timer.GetDuration());
+
+
+
+//  timer.Reset();
+//  timer.Start();
+//  int delete_num = 1000000;
+//  LaunchParallelTest(num_threads, TestingIndexUtil::DeleteHelperMicroBench, index.get(),
+//                     pool, scale_factor, delete_num);
+//  timer.Stop();
+//  printf("%lu tuples delete elapsed time = %.5lf\n", num_threads*scale_factor*read_num, timer.GetDuration());
+
+
+
+
+
+
 //  EXPECT_EQ(location_ptrs.size(), 7);
 //  location_ptrs.clear();
 //
@@ -981,6 +1000,38 @@ void TestingIndexUtil::ReadHelperMicroBench(index::Index *index, UNUSED_ATTRIBUT
       if (key_index >= 100000) {
         key_index = std::rand() % 100000;
       }
+    }
+  }
+}
+
+void TestingIndexUtil::ScanHelperMicroBench(index::Index *index, UNUSED_ATTRIBUTE type::AbstractPool *pool,
+                                            size_t scale_factor, int num_rows,
+                                            UNUSED_ATTRIBUTE uint64_t thread_itr) {
+  // Loop based on scale factor
+  std::vector<type::Value> value_list;
+  std::vector<oid_t> tuple_column_id_list;
+  std::vector<ExpressionType> expr_list;
+
+//  int random_start = std::rand() % 100000;
+//  int step = 3;
+//  int key_index = random_start;
+  std::vector<ItemPointer *> result;
+  for (size_t scale_itr = 1; scale_itr <= scale_factor; scale_itr++) {
+    for (int rowid = 0; rowid < num_rows; rowid++) {
+      result.clear();
+      int start_key = std::rand() % (num_rows / 2);
+      int end_key = std::rand() % (num_rows / 2) + start_key;
+      if (end_key >= num_rows) {
+        end_key = num_rows - 1;
+      }
+      index::ConjunctionScanPredicate *csp = new index::ConjunctionScanPredicate(key_to_values[start_key].key, key_to_values[end_key].key);
+//      index->ScanKey(key_to_values[key_index].key, result);
+      index->Scan(value_list, tuple_column_id_list, expr_list, ScanDirectionType::FORWARD, result, csp);
+
+//      key_index += step;
+//      if (key_index >= 100000) {
+//        key_index = std::rand() % 100000;
+//      }
     }
   }
 }

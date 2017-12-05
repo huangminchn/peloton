@@ -78,6 +78,10 @@ class TestingIndexUtil {
                                    size_t scale_factor, int num_rows,
                                    UNUSED_ATTRIBUTE uint64_t thread_itr);
 
+  static void ScanHelperMicroBench(index::Index *index, type::AbstractPool *pool,
+                                   size_t scale_factor, int num_rows,
+                                   UNUSED_ATTRIBUTE uint64_t thread_itr);
+
   static void DeleteHelperMicroBench(index::Index *index, type::AbstractPool *pool,
                                    size_t scale_factor, int num_rows,
                                    UNUSED_ATTRIBUTE uint64_t thread_itr);

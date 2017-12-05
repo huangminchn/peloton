@@ -48,6 +48,13 @@ namespace index {
  * late binding
  */
 class ConjunctionScanPredicate {
+public:
+  ConjunctionScanPredicate(storage::Tuple *low, storage::Tuple *high) {
+    low_key_p_ = low;
+    high_key_p_ = high;
+    is_point_query_ = false;
+    full_index_scan_ = false;
+  }
  private:
   // This is the list holding indices of the upper bound and lower bound
   // for the scan key. We only keep index in the corresponding Value[]
