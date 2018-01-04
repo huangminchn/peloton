@@ -69,7 +69,7 @@ class TupleValueExpression : public AbstractExpression {
     value_idx_ = value_idx;
     tuple_idx_ = tuple_idx;
   }
-  
+
   inline void SetValueType(type::TypeId type_id) {
     return_value_type_ = type_id;
   }
@@ -86,7 +86,6 @@ class TupleValueExpression : public AbstractExpression {
   void PerformBinding(const std::vector<const planner::BindingContext *> &
                           binding_contexts) override;
 
-
   // Return the attributes this expression uses
   void GetUsedAttributes(std::unordered_set<const planner::AttributeInfo *> &
                              attributes) const override {
@@ -94,13 +93,15 @@ class TupleValueExpression : public AbstractExpression {
     attributes.insert(GetAttributeRef());
   }
 
-  void GetUsedAttributesInPredicateOrder(std::vector<const planner::AttributeInfo *> &
-  attributes) const override {
+  void GetUsedAttributesInPredicateOrder(
+      std::vector<const planner::AttributeInfo *> &attributes) const override {
     PL_ASSERT(GetAttributeRef() != nullptr);
     attributes.push_back(GetAttributeRef());
   }
 
-  void GetComparisonTypeInPredicateOrder(UNUSED_ATTRIBUTE std::vector<ExpressionType> &comparison_type) const override {}
+  void GetComparisonTypeInPredicateOrder(
+      UNUSED_ATTRIBUTE std::vector<ExpressionType> &comparison_type)
+      const override {}
 
   AbstractExpression *Copy() const override {
     return new TupleValueExpression(*this);
@@ -115,16 +116,14 @@ class TupleValueExpression : public AbstractExpression {
   }
 
   virtual bool ExactlyEquals(const AbstractExpression &rhs) const override {
-    if (exp_type_ != rhs.GetExpressionType())
-      return false;
+    if (exp_type_ != rhs.GetExpressionType()) return false;
 
     auto &other = static_cast<const TupleValueExpression &>(rhs);
     // For query like SELECT A.id, B.id FROM test AS A, test AS B;
     // we need to know whether A.id is from A.id or B.id. In this case,
     // A.id and B.id have the same bound oids since they refer to the same table
     // but they have different table alias.
-    if (table_name_.empty() xor other.table_name_.empty())
-      return false;
+    if (table_name_.empty() xor other.table_name_.empty()) return false;
     bool are_equal = bound_obj_id_ == other.bound_obj_id_;
     if (!table_name_.empty() && !other.table_name_.empty())
       are_equal = (table_name_ == other.table_name_) && are_equal;
