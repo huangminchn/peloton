@@ -39,6 +39,24 @@ IndexScanIterator::IndexScanIterator(index::Index *index,
   }
 }
 
+void IndexScanIterator::Init(index::Index *index, uint64_t point_key_p, uint64_t low_key_p,
+                             uint64_t high_key_p) {
+  index_ = index;
+  if (point_key_p != 0) {
+    is_point_query_ = true;
+    is_full_scan_ = false;
+    point_key_p_ = (storage::Tuple *)point_key_p;
+  } else if (low_key_p != 0 && high_key_p != 0) {
+    is_point_query_ = false;
+    is_full_scan_ = false;
+    low_key_p_ = (storage::Tuple *)low_key_p;
+    high_key_p_ = (storage::Tuple *)high_key_p;
+  } else {
+    is_point_query_ = false;
+    is_full_scan_ = true;
+  }
+}
+
 bool SortByTileId(ItemPointer *left, ItemPointer *right) {
   return (left->block < right->block ||
           (left->block == right->block && left->offset < right->offset));

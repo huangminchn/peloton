@@ -74,6 +74,9 @@ class IndexScanTranslator : public OperatorTranslator {
 
   // The ID of the selection vector in runtime state
   RuntimeState::StateID selection_vector_id_;
+
+  // The ID of the index scan iterator in runtime state
+  RuntimeState::StateID iterator_state_id_;
 };
 
 }  // namespace codegen

@@ -63,6 +63,9 @@ IndexScanTranslator::IndexScanTranslator(
       "scanSelVec",
       codegen.ArrayType(codegen.Int32Type(), Vector::kDefaultVectorSize), true);
 
+  // Register the iterator's runtime state to approach it throughout this
+  iterator_state_id_ = context.GetRuntimeState().RegisterState(
+    "iterator", IndexScanIteratorProxy::GetType(GetCodeGen()));
 }
 
 // Produce!
@@ -101,10 +104,9 @@ void IndexScanTranslator::Produce() const {
     high_key = codegen.Const64((uint64_t)(csp->GetHighKey()));
   }
 
-  // construct an iterator for code gen index scan
-  llvm::Value *iterator_ptr =
-      codegen.Call(RuntimeFunctionsProxy::GetIterator,
-                   {index_ptr, point_key, low_key, high_key});
+  // Initialize the iterator with index and query tuples
+  llvm::Value *iterator_ptr = LoadStatePtr(iterator_state_id_);
+  codegen.Call(IndexScanIteratorProxy::Init, {iterator_ptr, index_ptr, point_key, low_key, high_key});
 
   // before doing scan, update the tuple with parameter cache!
   UpdateTupleWithParameterCache(codegen, iterator_ptr);
@@ -240,9 +242,6 @@ void IndexScanTranslator::Produce() const {
     loop.LoopEnd(codegen->CreateICmpULT(result_iter, result_size),
                  {result_iter});
   }
-
-  // free the memory allocated for the index scan iterator
-  codegen.Call(RuntimeFunctionsProxy::DeleteIterator, {iterator_ptr});
 }
 
 // Get the name of this scan

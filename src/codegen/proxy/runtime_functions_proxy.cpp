@@ -35,7 +35,6 @@ DEFINE_METHOD(peloton::codegen, RuntimeFunctions, GetTileGroupLayout);
 DEFINE_METHOD(peloton::codegen, RuntimeFunctions, FillPredicateArray);
 DEFINE_METHOD(peloton::codegen, RuntimeFunctions, ThrowDivideByZeroException);
 DEFINE_METHOD(peloton::codegen, RuntimeFunctions, ThrowOverflowException);
-DEFINE_METHOD(peloton::codegen, RuntimeFunctions, GetIterator);
-DEFINE_METHOD(peloton::codegen, RuntimeFunctions, DeleteIterator);
+
 }  // namespace codegen
 }  // namespace peloton

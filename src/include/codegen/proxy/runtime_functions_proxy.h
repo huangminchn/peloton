@@ -42,8 +42,6 @@ PROXY(RuntimeFunctions) {
   DECLARE_METHOD(FillPredicateArray);
   DECLARE_METHOD(ThrowDivideByZeroException);
   DECLARE_METHOD(ThrowOverflowException);
-  DECLARE_METHOD(GetIterator);
-  DECLARE_METHOD(DeleteIterator);
 };
 
 TYPE_BUILDER(ColumnLayoutInfo, codegen::RuntimeFunctions::ColumnLayoutInfo);

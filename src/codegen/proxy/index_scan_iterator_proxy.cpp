@@ -12,11 +12,15 @@
 
 #include "codegen/proxy/index_scan_iterator_proxy.h"
 
+#include "codegen/proxy/index_proxy.h"
+#include "codegen/proxy/tuple_proxy.h"
+
 namespace peloton {
 namespace codegen {
 DEFINE_TYPE(IndexScanIterator, "peloton::codegen::util::IndexScanIterator",
             MEMBER(opaque));
 
+DEFINE_METHOD(peloton::codegen::util, IndexScanIterator, Init);
 DEFINE_METHOD(peloton::codegen::util, IndexScanIterator, DoScan);
 DEFINE_METHOD(peloton::codegen::util, IndexScanIterator,
               GetDistinctTileGroupNum);

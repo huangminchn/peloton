@@ -34,6 +34,10 @@ class IndexScanIterator {
   IndexScanIterator(index::Index *index, storage::Tuple *point_key_p,
                     storage::Tuple *low_key_p, storage::Tuple *high_key_p);
 
+  // Initializes the instance
+  void Init(index::Index *index, uint64_t point_key_p,
+            uint64_t low_key_p, uint64_t high_key_p);
+
   void DoScan();
 
   uint64_t GetDistinctTileGroupNum() {

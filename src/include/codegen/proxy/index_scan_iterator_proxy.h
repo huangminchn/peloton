@@ -23,6 +23,7 @@ PROXY(IndexScanIterator) {
   DECLARE_MEMBER(0, char[sizeof(util::IndexScanIterator)], opaque);
   DECLARE_TYPE;
 
+  DECLARE_METHOD(Init);
   DECLARE_METHOD(DoScan);
   DECLARE_METHOD(GetDistinctTileGroupNum);
   DECLARE_METHOD(GetTileGroupId);

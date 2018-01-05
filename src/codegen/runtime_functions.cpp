@@ -23,8 +23,6 @@
 #include "storage/tile.h"
 #include "storage/zone_map_manager.h"
 #include "type/value_factory.h"
-#include "codegen/util/index_scan_iterator.h"
-#include "storage/tuple.h"
 
 namespace peloton {
 namespace codegen {
@@ -135,21 +133,6 @@ void RuntimeFunctions::ThrowDivideByZeroException() {
 
 void RuntimeFunctions::ThrowOverflowException() {
   throw std::overflow_error("ERROR: overflow");
-}
-
-util::IndexScanIterator *RuntimeFunctions::GetIterator(index::Index *index,
-                                                       uint64_t point_key_p,
-                                                       uint64_t low_key_p,
-                                                       uint64_t high_key_p) {
-  util::IndexScanIterator *iterator = new util::IndexScanIterator(
-      index, (storage::Tuple *)point_key_p, (storage::Tuple *)low_key_p,
-      (storage::Tuple *)high_key_p);
-  return iterator;
-}
-
-void RuntimeFunctions::DeleteIterator(util::IndexScanIterator *iterator) {
-  PL_ASSERT(iterator != nullptr);
-  delete iterator;
 }
 
 }  // namespace codegen
