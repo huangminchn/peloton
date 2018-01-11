@@ -46,6 +46,7 @@ bool SortByTileId(ItemPointer *left, ItemPointer *right) {
 void IndexScanIterator::DoScan() {
   LOG_TRACE("do scan in iterator");
   if (is_point_query_) {
+    printf("point query key = %s\n", point_key_p_->GetValue(0).GetInfo().c_str());
     index_->ScanKey(point_key_p_, result_);
   } else if (is_full_scan_) {
     index_->CodeGenFullScan(result_);
@@ -53,6 +54,7 @@ void IndexScanIterator::DoScan() {
     index_->CodeGenRangeScan(low_key_p_, high_key_p_, result_);
   }
   LOG_TRACE("result size = %lu\n", result_.size());
+  printf("result size = %lu\n", result_.size());
 
   // TODO:
   // currently the RowBatch produced in the index scan only contains one
@@ -90,7 +92,7 @@ void IndexScanIterator::UpdateTupleWithInteger(
     int value, UNUSED_ATTRIBUTE int attribute_id, char *attribute_name,
     bool is_lower_key) {
   if (is_full_scan_) return;
-
+  printf("update attribute name = %s\n", attribute_name);
   storage::Tuple *update_tuple =
       (is_point_query_) ? point_key_p_
                         : ((is_lower_key) ? low_key_p_ : high_key_p_);
@@ -168,7 +170,7 @@ void IndexScanIterator::UpdateTupleWithBoolean(
     bool value, UNUSED_ATTRIBUTE int attribute_id, char *attribute_name,
     bool is_lower_key) {
   if (is_full_scan_) return;
-
+  printf("update attribute name = %s\n", attribute_name);
   storage::Tuple *update_tuple =
       (is_point_query_) ? point_key_p_
                         : ((is_lower_key) ? low_key_p_ : high_key_p_);
